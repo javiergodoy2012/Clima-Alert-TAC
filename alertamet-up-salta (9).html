@@ -1,0 +1,1648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlertaMet — UP Salta</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0f1117;--bg2:#161b27;--surface:#1c2333;--surface2:#232d42;
+  --border:#2a3550;--border2:#354060;
+  --ink:#e8eaf0;--ink2:#a0aec0;--ink3:#64748b;
+  --accent:#f59e0b;--accent2:#3b82f6;
+  --hot:#ef4444;--cold:#60a5fa;--rain:#06b6d4;--storm:#a855f7;
+  --ok:#22c55e;--warn:#f59e0b;--danger:#ef4444;
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+
+/* Subtle grid bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(59,130,246,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(59,130,246,0.04) 1px,transparent 1px);
+  background-size:32px 32px;pointer-events:none;z-index:0;
+}
+
+.app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 20px 60px;}
+
+/* ── HEADER ── */
+header{
+  padding:20px 0 18px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;
+  min-height:80px;
+}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-box{
+  width:42px;height:42px;border-radius:10px;
+  background:linear-gradient(135deg,#f59e0b,#ef4444);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:0 0 20px rgba(245,158,11,0.3);
+}
+.logo-text{display:flex;flex-direction:column;gap:1px;}
+.logo-title{font-family:'Space Mono',monospace;font-size:16px;font-weight:700;letter-spacing:-0.5px;}
+.logo-sub{font-size:11px;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;}
+.header-right{display:flex;align-items:center;gap:10px;}
+
+.badge{
+  display:flex;align-items:center;gap:6px;
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
+  padding:5px 12px;border-radius:100px;
+  border:1px solid;
+}
+.badge-live{border-color:rgba(34,197,94,0.4);color:var(--ok);background:rgba(34,197,94,0.07);}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+
+.btn{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  padding:8px 18px;border-radius:8px;border:none;cursor:pointer;
+  transition:all 0.18s;display:flex;align-items:center;gap:7px;
+}
+.btn-primary{background:var(--accent);color:#0f1117;}
+.btn-primary:hover{background:#fbbf24;transform:translateY(-1px);}
+.btn-ghost{background:var(--surface);color:var(--ink2);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--surface2);color:var(--ink);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-danger-ghost{background:transparent;color:var(--danger);border:1px solid rgba(239,68,68,0.3);font-size:12px;padding:4px 10px;}
+.btn-danger-ghost:hover{background:rgba(239,68,68,0.1);}
+.spin{animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;margin:24px 0;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;}
+.tab{
+  font-size:13px;font-weight:600;padding:8px 20px;border-radius:7px;
+  border:none;background:transparent;color:var(--ink3);cursor:pointer;transition:all 0.15s;
+}
+.tab.active{background:var(--surface2);color:var(--ink);border:1px solid var(--border2);}
+.tab:hover:not(.active){color:var(--ink2);}
+
+/* ── PANELS ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── AUTO REFRESH BAR ── */
+.refresh-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px 20px;margin-bottom:24px;flex-wrap:wrap;gap:12px;
+}
+.refresh-info{display:flex;align-items:center;gap:12px;}
+.refresh-label{font-size:13px;color:var(--ink2);}
+.refresh-select{
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;
+  background:var(--surface2);color:var(--ink);border:1px solid var(--border2);
+  padding:6px 12px;border-radius:6px;cursor:pointer;
+}
+.refresh-countdown{font-family:'Space Mono',monospace;font-size:12px;color:var(--accent);}
+.last-update{font-size:11px;color:var(--ink3);}
+
+/* ── SECTOR GRID ── */
+.sectors-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+
+.sector-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;transition:border-color 0.2s;
+}
+.sector-card:hover{border-color:var(--border2);}
+.sector-card.alert-hot{border-color:rgba(239,68,68,0.5);box-shadow:0 0 20px rgba(239,68,68,0.08);}
+.sector-card.alert-cold{border-color:rgba(96,165,250,0.5);box-shadow:0 0 20px rgba(96,165,250,0.08);}
+.sector-card.alert-rain{border-color:rgba(6,182,212,0.5);box-shadow:0 0 20px rgba(6,182,212,0.08);}
+.sector-card.alert-storm{border-color:rgba(168,85,247,0.5);box-shadow:0 0 20px rgba(168,85,247,0.08);}
+
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 12px;border-bottom:1px solid var(--border);
+}
+.card-name{font-size:14px;font-weight:700;letter-spacing:-0.2px;}
+.card-coords{font-family:'Space Mono',monospace;font-size:10px;color:var(--ink3);margin-top:1px;}
+.alert-chips{display:flex;gap:5px;flex-wrap:wrap;}
+.chip{
+  font-size:10px;font-weight:600;padding:3px 9px;border-radius:100px;
+  letter-spacing:0.3px;border:1px solid;
+}
+.chip-hot{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.4);color:#f87171;}
+.chip-cold{background:rgba(96,165,250,0.12);border-color:rgba(96,165,250,0.4);color:#93c5fd;}
+.chip-rain{background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.4);color:#67e8f9;}
+.chip-storm{background:rgba(168,85,247,0.12);border-color:rgba(168,85,247,0.4);color:#d8b4fe;}
+.chip-ok{background:rgba(34,197,94,0.1);border-color:rgba(34,197,94,0.3);color:#86efac;}
+
+.card-body{padding:16px;}
+.weather-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.w-stat{
+  flex:1;min-width:80px;background:var(--bg2);border-radius:8px;
+  padding:10px 12px;display:flex;flex-direction:column;gap:3px;
+}
+.w-stat-icon{font-size:18px;}
+.w-stat-val{font-size:20px;font-weight:700;line-height:1;}
+.w-stat-label{font-size:10px;color:var(--ink3);letter-spacing:0.5px;text-transform:uppercase;}
+.loading-shimmer{
+  background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 50%,var(--surface2) 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;height:20px;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.card-footer{padding:0 16px 14px;display:flex;align-items:center;justify-content:space-between;}
+.card-status{font-size:11px;color:var(--ink3);}
+.btn-send-card{
+  font-size:11px;font-weight:600;padding:5px 14px;border-radius:6px;
+  background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);
+  color:#25d166;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px;
+}
+.btn-send-card:hover{background:rgba(37,211,102,0.22);}
+
+/* ── THRESHOLDS ── */
+.thresholds-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:32px;}
+.threshold-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.threshold-title{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.threshold-icon{font-size:22px;}
+.threshold-name{font-size:15px;font-weight:700;}
+.threshold-desc{font-size:11px;color:var(--ink3);margin-top:1px;}
+.threshold-field{margin-bottom:12px;}
+.threshold-field label{display:block;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.threshold-input-row{display:flex;align-items:center;gap:8px;}
+.threshold-input{
+  font-family:'Space Mono',monospace;font-size:14px;font-weight:700;
+  width:90px;padding:8px 10px;border-radius:7px;
+  background:var(--bg2);border:1px solid var(--border2);color:var(--ink);
+}
+.threshold-unit{font-size:12px;color:var(--ink3);}
+.threshold-toggle{
+  display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:14px;
+  border-top:1px solid var(--border);
+}
+.toggle{position:relative;width:36px;height:20px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{
+  position:absolute;inset:0;background:var(--border2);border-radius:100px;cursor:pointer;transition:0.2s;
+}
+.toggle-slider::before{
+  content:'';position:absolute;width:14px;height:14px;
+  left:3px;top:3px;border-radius:50%;background:#fff;transition:0.2s;
+}
+.toggle input:checked + .toggle-slider{background:var(--ok);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px);}
+.toggle-label{font-size:12px;color:var(--ink2);}
+
+/* ── CONTACTS ── */
+.contacts-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.contacts-title{font-size:18px;font-weight:700;}
+.add-contact-form{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:24px;
+}
+.form-input{
+  font-family:'Outfit',sans-serif;font-size:13px;
+  flex:1;min-width:160px;padding:9px 14px;border-radius:7px;
+  background:var(--bg2);border:1px solid var(--border2);color:var(--ink);
+}
+.form-input::placeholder{color:var(--ink3);}
+.contacts-list{display:flex;flex-direction:column;gap:10px;}
+.contact-row{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;
+  flex-wrap:wrap;gap:10px;
+}
+.contact-info{display:flex;align-items:center;gap:12px;}
+.contact-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent2),var(--storm));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.contact-name{font-size:14px;font-weight:600;}
+.contact-phone{font-family:'Space Mono',monospace;font-size:11px;color:var(--ink3);margin-top:1px;}
+.contact-actions{display:flex;gap:8px;align-items:center;}
+.btn-whatsapp{
+  font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;
+  background:rgba(37,211,102,0.12);border:1px solid rgba(37,211,102,0.3);
+  color:#25d166;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:5px;
+}
+.btn-whatsapp:hover{background:rgba(37,211,102,0.22);}
+
+/* ── LOG ── */
+.log-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.log-list{display:flex;flex-direction:column;gap:8px;max-height:500px;overflow-y:auto;}
+.log-item{
+  display:flex;align-items:flex-start;gap:12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;
+}
+.log-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.log-time{font-family:'Space Mono',monospace;font-size:10px;color:var(--ink3);flex-shrink:0;margin-top:2px;}
+.log-msg{font-size:13px;color:var(--ink2);}
+.log-msg strong{color:var(--ink);}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;
+}
+.toast-item{
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:10px;padding:12px 18px;
+  font-size:13px;min-width:260px;max-width:360px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  animation:slideIn 0.25s ease;
+}
+@keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
+.toast-item.ok{border-left:3px solid var(--ok);}
+.toast-item.warn{border-left:3px solid var(--warn);}
+.toast-item.err{border-left:3px solid var(--danger);}
+
+
+.thr-sector-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+.thr-sector-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;transition:background 0.15s;}
+.thr-sector-header:hover{background:var(--surface2);}
+.thr-chevron{color:var(--ink3);font-size:12px;transition:transform 0.2s;}
+.thr-sector-body{padding:0 16px 16px;}
+
+
+
+/* ── REPORT TABLE ── */
+.rth{
+  padding:10px 12px;text-align:center;font-size:11px;font-weight:700;
+  letter-spacing:.3px;text-transform:uppercase;border:1px solid #3a4a6a;
+  white-space:nowrap;
+}
+.rth-loc,.rth-prov,.rth-ram{ background:#2a3a5a;color:#f5c842; }
+.rth-p1{ background:#c8a200;color:#fff; }
+.rth-p2{ background:#b07000;color:#fff; }
+.rth-tot{ background:#c8a200;color:#fff; }
+.rth-alerta{ background:#2a3a5a;color:#f5c842; }
+.rtd{
+  padding:9px 12px;border:1px solid #2a3550;text-align:center;
+  font-size:13px;vertical-align:middle;
+}
+.rtd-loc{ text-align:left;font-weight:600; }
+.rtd-num{ font-family:'Space Mono',monospace;font-weight:700; }
+.alerta-bajo{ background:rgba(34,197,94,.12);color:#86efac;font-weight:700; }
+.alerta-moderado{ background:rgba(245,158,11,.12);color:#fcd34d;font-weight:700; }
+.alerta-alto{ background:rgba(239,68,68,.12);color:#fca5a5;font-weight:700; }
+.alerta-ascendente{ background:rgba(168,85,247,.12);color:#d8b4fe;font-weight:700; }
+tr:nth-child(even) .rtd{ background:rgba(255,255,255,.02); }
+tr:hover .rtd{ background:rgba(59,130,246,.05); }
+
+
+/* ── FORECAST 24HS ── */
+.forecast-bar{
+  border-top:1px solid var(--border);
+  padding:10px 16px 12px;
+  background:rgba(0,0,0,.15);
+}
+.forecast-title{
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--ink3);font-weight:700;margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
+}
+.forecast-slots{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;
+}
+.forecast-slot{
+  flex-shrink:0;min-width:52px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:7px;
+  padding:6px 8px;text-align:center;
+}
+.forecast-slot-time{ font-size:10px;color:var(--ink3);margin-bottom:3px; }
+.forecast-slot-icon{ font-size:16px;line-height:1;margin-bottom:2px; }
+.forecast-slot-temp{ font-size:12px;font-weight:700;color:var(--ink); }
+.forecast-slot-rain{
+  font-size:10px;color:var(--rain);margin-top:2px;
+  font-family:'Space Mono',monospace;
+}
+.forecast-slot-rain.no-rain{ color:var(--ink3); }
+
+
+/* ── WINDY MAP ── */
+.map-layer-btn{
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;
+  padding:6px 14px;border-radius:7px;border:1px solid var(--border2);
+  background:var(--surface2);color:var(--ink2);cursor:pointer;transition:all .15s;
+}
+.map-layer-btn:hover{ color:var(--ink);background:var(--surface); }
+.map-layer-btn.active{ background:var(--accent);color:#0f1117;border-color:var(--accent); }
+.map-sector-chip{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;padding:5px 12px;border-radius:7px;
+  background:var(--surface);border:1px solid var(--border);
+  cursor:default;
+}
+.map-sector-dot{ width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+
+/* ── MAP ── */
+
+
+/* ── ALARM ── */
+.alarm-bar{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px;
+  padding:14px 20px;margin-bottom:24px;
+}
+.alarm-left{ display:flex;align-items:center;gap:14px; }
+.alarm-label{ font-size:13px;color:var(--ink2); }
+.alarm-active{ color:var(--ok)!important; font-weight:600; }
+.alarm-sounding{ animation:alarm-pulse 0.5s ease-in-out infinite alternate; }
+@keyframes alarm-pulse{ from{box-shadow:0 0 0 0 rgba(239,68,68,0.4)} to{box-shadow:0 0 0 12px rgba(239,68,68,0)} }
+
+/* ── EXPORT ── */
+.export-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+
+@media(max-width:600px){
+  .sectors-grid{grid-template-columns:1fr;}
+  .add-contact-form{flex-direction:column;}
+  .form-input{width:100%;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<header style="position:relative;">
+  <!-- Logo TAC izquierda -->
+  <div class="logo">
+    <img src="data:image/jpeg;base64,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" alt="Trenes Argentinos Cargas" style="height:56px;width:auto;object-fit:contain;border-radius:4px;">
+  </div>
+
+  <!-- Título centrado -->
+  <div style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;">
+    <div style="font-family:'Space Mono',monospace;font-size:13px;color:#f5c842;letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;font-weight:700;">UP SALTA</div>
+    <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px;line-height:1;">Estado Meteorológico</div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:3px;letter-spacing:.5px;">Sistema de Alertas · Ferrocarril Belgrano Cargas</div>
+  </div>
+
+  <!-- Controles derecha -->
+  <div class="header-right" style="flex-direction:column;align-items:flex-end;gap:8px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div class="badge badge-live"><span class="badge-dot"></span>ONLINE</div>
+      <button class="btn btn-ghost btn-sm" onclick="refreshAll()">
+        <span id="refresh-icon">🔄</span> Actualizar
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="sendAlertAll()">
+        <span>📱</span> Enviar Alertas
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('clima')">🌤️ Clima</button>
+  <button class="tab" onclick="showTab('mapa')">🗺️ Mapa</button>
+  <button class="tab" onclick="showTab('umbrales')">⚙️ Umbrales</button>
+  <button class="tab" onclick="showTab('contactos')">👥 Contactos</button>
+  <button class="tab" onclick="showTab('reporte')">📈 Reporte</button>
+  <button class="tab" onclick="showTab('historial')">📋 Historial</button>
+</div>
+
+<!-- PANEL: CLIMA -->
+<div id="panel-clima" class="panel active">
+  <div class="alarm-bar">
+    <div class="alarm-left">
+      <span style="font-size:22px;">🔔</span>
+      <div>
+        <div class="alarm-label" id="alarm-status-label">Alarma sonora: <span id="alarm-on-label" class="alarm-active">Activada</span></div>
+        <div style="font-size:11px;color:var(--ink3);margin-top:2px;">Suena al detectar condiciones de alerta en cualquier sector</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <label class="toggle"><input type="checkbox" id="alarm-toggle" checked onchange="toggleAlarm()"><span class="toggle-slider"></span></label>
+      <button class="btn btn-ghost btn-sm" onclick="testAlarm()">🔊 Probar sonido</button>
+      <button class="btn btn-ghost btn-sm" onclick="stopAlarm()">🔇 Silenciar</button>
+    </div>
+  </div>
+  <div class="refresh-bar">
+    <div class="refresh-info">
+      <span class="refresh-label">Auto-actualización:</span>
+      <select class="refresh-select" id="refresh-interval" onchange="setAutoRefresh()">
+        <option value="0">Manual</option>
+        <option value="30">Cada 30 min</option>
+        <option value="60" selected>Cada 1 hora</option>
+        <option value="180">Cada 3 horas</option>
+        <option value="360">Cada 6 horas</option>
+      </select>
+      <span class="refresh-countdown" id="countdown-label"></span>
+    </div>
+    <span class="last-update" id="last-update">Nunca actualizado</span>
+  </div>
+  <div class="sectors-grid" id="sectors-grid"></div>
+</div>
+
+<!-- PANEL: MAPA -->
+<div id="panel-mapa" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:18px;font-weight:700;">Mapa Meteorológico — UP Salta</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:3px;">Mapa animado Windy · Capas en tiempo real</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;" id="map-layer-btns">
+      <button class="map-layer-btn active" onclick="setWindyLayer('wind')">💨 Viento</button>
+      <button class="map-layer-btn" onclick="setWindyLayer('rain')">🌧️ Lluvia</button>
+      <button class="map-layer-btn" onclick="setWindyLayer('temp')">🌡️ Temperatura</button>
+      <button class="map-layer-btn" onclick="setWindyLayer('clouds')">☁️ Nubes</button>
+    </div>
+  </div>
+  <div style="position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);">
+    <iframe id="windy-iframe"
+      src="https://embed.windy.com/embed2.html?lat=-24.5&lon=-65.5&detailLat=-24.7859&detailLon=-65.4116&width=100%&height=550&zoom=7&level=surface&overlay=wind&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
+      style="width:100%;height:550px;border:none;"
+      allowfullscreen>
+    </iframe>
+    <!-- Sector markers overlay -->
+    <div id="map-markers-overlay" style="position:absolute;inset:0;pointer-events:none;"></div>
+  </div>
+  <!-- Sector list below map -->
+  <div style="margin-top:16px;">
+    <div style="font-size:12px;color:var(--ink3);margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">Estado de sectores</div>
+    <div id="map-sector-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+  </div>
+</div>
+
+<!-- PANEL: UMBRALES -->
+<div id="panel-umbrales" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:18px;font-weight:700;">Umbrales por Sector</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:3px;">Configurá los límites de alerta para cada localidad individualmente</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="resetAllThresholds()">↺ Restaurar defaults</button>
+      <button class="btn btn-primary" onclick="saveThresholds()">💾 Guardar Todo</button>
+    </div>
+  </div>
+  <div id="thresholds-accordion"></div>
+</div>
+
+<!-- PANEL: CONTACTOS -->
+<div id="panel-contactos" class="panel">
+  <div class="contacts-header">
+    <div class="contacts-title">Contactos WhatsApp</div>
+    <div style="font-size:12px;color:var(--ink3)" id="contact-count"></div>
+  </div>
+  <div class="add-contact-form">
+    <input class="form-input" type="text" id="new-name" placeholder="Nombre completo">
+    <input class="form-input" type="tel" id="new-phone" placeholder="+54 9 387 XXX XXXX">
+    <button class="btn btn-primary" onclick="addContact()">+ Agregar</button>
+  </div>
+  <div class="contacts-list" id="contacts-list"></div>
+</div>
+
+<!-- PANEL: REPORTE -->
+<div id="panel-reporte" class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:18px;font-weight:700;">Reporte Quincenal de Precipitaciones</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:3px;">Se genera automáticamente cada 30 min · Formato UP Salta</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="generateReport()">🔄 Generar Ahora</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportReportExcel()">📊 Excel</button>
+      <button class="btn btn-primary btn-sm" onclick="sendReportWhatsApp()">📱 WhatsApp</button>
+    </div>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <div>
+      <div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Período 1 — Real</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="date" id="p1-start" class="form-input" style="width:140px;font-size:12px;padding:6px 10px;">
+        <span style="color:var(--ink3);font-size:12px;">al</span>
+        <input type="date" id="p1-end" class="form-input" style="width:140px;font-size:12px;padding:6px 10px;">
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Período 2 — Proyectado</div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <input type="date" id="p2-start" class="form-input" style="width:140px;font-size:12px;padding:6px 10px;">
+        <span style="color:var(--ink3);font-size:12px;">al</span>
+        <input type="date" id="p2-end" class="form-input" style="width:140px;font-size:12px;padding:6px 10px;">
+      </div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="generateReport()" style="align-self:flex-end;">Aplicar</button>
+  </div>
+  <div style="font-size:11px;color:var(--ink3);margin-bottom:12px;" id="report-lastgen">No generado aún</div>
+  <div style="overflow-x:auto;">
+    <table id="report-table" style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th class="rth rth-loc">Localidad</th>
+          <th class="rth rth-prov">Provincia</th>
+          <th class="rth rth-ram">Ramal</th>
+          <th class="rth rth-p1" id="th-p1">Período 1<br><span style="font-weight:400;font-size:10px;">(Real mm)</span></th>
+          <th class="rth rth-p2" id="th-p2">Período 2<br><span style="font-weight:400;font-size:10px;">(Proyectado mm)</span></th>
+          <th class="rth rth-tot">Total Quincena<br><span style="font-weight:400;font-size:10px;">(Est. mm)</span></th>
+          <th class="rth rth-alerta">Estado de Alerta</th>
+        </tr>
+      </thead>
+      <tbody id="report-tbody">
+        <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--ink3);">Presioná "Generar Ahora" para cargar el reporte</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PANEL: HISTORIAL -->
+<div id="panel-historial" class="panel">
+  <div class="log-header">
+    <div class="contacts-title">Historial de Alertas</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📊 Exportar Excel</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📄 Exportar CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="clearLog()">🗑️ Limpiar</button>
+    </div>
+  </div>
+  <div class="log-list" id="log-list">
+    <div style="text-align:center;padding:40px;color:var(--ink3);font-size:14px;">
+      No hay alertas registradas aún
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// SECTORES UP SALTA — Coordenadas reales
+// ══════════════════════════════════════════════
+const SECTORS = [
+  { id:'s1',  name:'Salta Capital',             lat:-24.7859, lon:-65.4116 },
+
+  { id:'s3',  name:'Metán',                     lat:-25.4944, lon:-64.9744 },
+  { id:'s4',  name:'Embarcación',               lat:-23.2097, lon:-64.1014 },
+  { id:'s5',  name:'Pichanal',                  lat:-23.3167, lon:-64.2167 },
+  { id:'s6',  name:'General Güemes',            lat:-24.6667, lon:-65.0500 },
+  { id:'s7',  name:'Perico',                    lat:-24.3833, lon:-65.1167 },
+  { id:'s8',  name:'San Pedro de Jujuy',        lat:-24.2333, lon:-64.8667 },
+  { id:'s9',  name:'Campo Quijano',             lat:-24.9000, lon:-65.6333 },
+  { id:'s11', name:'San Antonio de los Cobres', lat:-24.226711, lon:-66.316378 },
+  { id:'s12', name:'Tolar Grande',              lat:-24.588351, lon:-67.390988 },
+  { id:'s13', name:'Socompa',                   lat:-24.4167, lon:-68.2333 },
+  { id:'s18', name:'Lumbreras',                  lat:-25.209216, lon:-64.925198 },
+  { id:'s19', name:'Palomitas',                  lat:-24.898745, lon:-64.973082 },
+  { id:'s20', name:'Ing. Maury',                 lat:-24.681907, lon:-65.772606 },
+  { id:'s21', name:'Las Cuevas',                 lat:-24.341251, lon:-65.994822 },
+  { id:'s22', name:'Laguna Seca',                lat:-24.227840, lon:-66.916828 },
+  { id:'s23', name:'Gral. Savio',                lat:-24.250277, lon:-65.204414 },
+  { id:'s24', name:'La Estrella',                lat:-23.822596, lon:-64.072220 },
+  { id:'s25', name:'Gral. Pizarro',              lat:-24.227961, lon:-63.992501 },
+  { id:'s14', name:'Yuto',                       lat:-23.6333, lon:-64.4667 },
+  { id:'s15', name:'Urundel',                    lat:-23.5667, lon:-64.3833 },
+  { id:'s16', name:'Ledesma',                    lat:-23.8167, lon:-64.7833 },
+  { id:'s17', name:'Fraile Pintado',             lat:-23.9333, lon:-64.7833 },
+];
+
+// ══════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════
+let weatherData = {};
+let contacts = JSON.parse(localStorage.getItem('upsalta-contacts')||'[]');
+if(!contacts.length) contacts = [
+  {id:'c1',name:'Jefe de Operaciones',phone:'+5493871234567'},
+  {id:'c2',name:'Responsable de Seguridad',phone:'+5493877654321'},
+];
+let alertLog = JSON.parse(localStorage.getItem('upsalta-log')||'[]');
+let autoInterval = null;
+let countdownTimer = null;
+let countdownSecs = 0;
+
+// Umbrales individuales por sector
+const DEFAULT_THR = {
+  s1:  { hot:38, cold:2,  rain:20, wind:60, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s3:  { hot:37, cold:2,  rain:18, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s4:  { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s5:  { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s6:  { hot:38, cold:2,  rain:18, wind:60, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s7:  { hot:37, cold:1,  rain:18, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s8:  { hot:36, cold:1,  rain:18, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s9:  { hot:34, cold:0,  rain:15, wind:60, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s11: { hot:20, cold:-5, rain:8,  wind:70, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s12: { hot:18, cold:-8, rain:5,  wind:75, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s13: { hot:16, cold:-10,rain:4,  wind:80, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s18: { hot:37, cold:2,  rain:18, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s19: { hot:38, cold:2,  rain:18, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s20: { hot:22, cold:-3, rain:8,  wind:70, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s21: { hot:18, cold:-8, rain:5,  wind:75, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s22: { hot:20, cold:-5, rain:6,  wind:72, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s23: { hot:38, cold:2,  rain:18, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s24: { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s25: { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s14: { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s15: { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s16: { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+  s17: { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
+};
+let sectorThresholds = JSON.parse(localStorage.getItem('upsalta-thresholds') || 'null') || JSON.parse(JSON.stringify(DEFAULT_THR));
+function getThr(id){ return sectorThresholds[id] || DEFAULT_THR[id] || {hot:38,cold:2,rain:20,wind:60,enHot:true,enCold:true,enRain:true,enStorm:true}; }
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+window.onload = () => {
+  renderSectors();
+  renderThresholds();
+  renderContacts();
+  renderLog();
+  setAutoRefresh();
+  refreshAll();
+  initReportDates();
+  startReportAutoTimer();
+};
+
+// ══════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════
+function showTab(name){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  event.target.classList.add('active');
+  if(name==='mapa'){ setTimeout(()=>{ initMap(); updateMapMarkers(); },120); }
+}
+
+// ══════════════════════════════════════════════
+// RENDER SECTORS (skeleton)
+// ══════════════════════════════════════════════
+function renderSectors(){
+  const grid = document.getElementById('sectors-grid');
+  grid.innerHTML = SECTORS.map(s=>`
+    <div class="sector-card" id="card-${s.id}">
+      <div class="card-header">
+        <div>
+          <div class="card-name">📍 ${s.name}</div>
+          <div class="card-coords">${s.lat.toFixed(4)}, ${s.lon.toFixed(4)}</div>
+        </div>
+        <div class="alert-chips" id="chips-${s.id}">
+          <span class="chip chip-ok">✓ OK</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="weather-row" id="weather-${s.id}">
+          ${['🌡️','🌧️','💨','💧'].map(icon=>`
+            <div class="w-stat">
+              <span class="w-stat-icon">${icon}</span>
+              <div class="loading-shimmer" style="width:60px;height:24px;margin:4px 0"></div>
+              <div class="loading-shimmer" style="width:50px;height:10px"></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="card-footer">
+        <span class="card-status" id="status-${s.id}">Cargando...</span>
+        <button class="btn-send-card" onclick="sendAlertSector('${s.id}')">
+          <span>📱</span> WhatsApp
+        </button>
+      </div>
+      <div class="forecast-bar">
+        <div class="forecast-title">🕐 Próximas 24hs</div>
+        <div class="forecast-slots" id="forecast-${s.id}">
+          ${[...Array(6)].map(()=>`
+            <div class="forecast-slot">
+              <div class="loading-shimmer" style="width:40px;height:10px;margin:0 auto 3px"></div>
+              <div class="loading-shimmer" style="width:24px;height:18px;margin:0 auto 2px"></div>
+              <div class="loading-shimmer" style="width:36px;height:10px;margin:0 auto"></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════
+// FETCH WEATHER — Open-Meteo (sin API key)
+// ══════════════════════════════════════════════
+const WINDY_KEY = 'g2jeSUr0xkj1OjXvZ5SR9GlHnnWcXWcX';
+
+async function fetchSector(sector){
+  // Open-Meteo: CORS-free, works from GitHub Pages
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${sector.lat}&longitude=${sector.lon}&current=temperature_2m,precipitation,wind_speed_10m,relative_humidity_2m,weather_code&hourly=temperature_2m,precipitation,wind_speed_10m&wind_speed_unit=kmh&timezone=America%2FArgentina%2FSalta&forecast_days=2`;
+
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if(!data.current) throw new Error('Sin datos');
+
+  const cur = data.current;
+
+  // Build 24h forecast — find current hour, take next 8 slots
+  const now = new Date();
+  const times = data.hourly?.time || [];
+  const temps = data.hourly?.temperature_2m || [];
+  const rains = data.hourly?.precipitation || [];
+  const winds = data.hourly?.wind_speed_10m || [];
+
+  let startIdx = 0;
+  for(let i=0; i<times.length; i++){
+    if(new Date(times[i]) >= now){ startIdx = i; break; }
+  }
+
+  const forecast24 = [];
+  for(let i=startIdx; i<Math.min(startIdx+8, times.length); i++){
+    forecast24.push({
+      temp: parseFloat((temps[i]??0).toFixed(1)),
+      rain: parseFloat((rains[i]??0).toFixed(1)),
+      wind: parseFloat((winds[i]??0).toFixed(0)),
+      time: new Date(times[i])
+    });
+  }
+
+  return {
+    temperature_2m:       cur.temperature_2m,
+    precipitation:        cur.precipitation,
+    wind_speed_10m:       cur.wind_speed_10m,
+    relative_humidity_2m: cur.relative_humidity_2m,
+    weather_code:         cur.weather_code,
+    weather_desc:         '',
+    forecast24
+  };
+}
+
+async function refreshAll(){
+  const icon = document.getElementById('refresh-icon');
+  icon.classList.add('spin');
+  const now = new Date();
+  let ok = 0, fail = 0;
+
+  for(const s of SECTORS){
+    try{
+      const cur = await fetchSector(s);
+      weatherData[s.id] = cur;
+      updateCard(s, cur);
+      ok++;
+    } catch(e){
+      fail++;
+      console.error(`Error sector ${s.name}:`, e);
+      document.getElementById('status-'+s.id).textContent = `Sin conexión`;
+      document.getElementById('weather-'+s.id).innerHTML = `
+        <div style="padding:12px;color:var(--ink3);font-size:12px;width:100%;text-align:center;">
+          ⚠️ No se pudo obtener datos.<br>
+          <a href="https://api.open-meteo.com/v1/forecast?latitude=${s.lat}&longitude=${s.lon}&current=temperature_2m,precipitation,wind_speed_10m,relative_humidity_2m,weather_code&wind_speed_unit=kmh" 
+             target="_blank" style="color:var(--accent2);font-size:11px;">Probar API manualmente</a>
+        </div>`;
+    }
+  }
+
+  icon.classList.remove('spin');
+  document.getElementById('last-update').textContent =
+    `Actualizado: ${now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}`;
+
+  checkAndAlert();
+  if(fail===0) toast(`✅ ${ok} sectores actualizados`,'ok');
+  else if(ok===0) toast(`❌ Sin conexión a Open-Meteo. Verificá internet.`,'err');
+  else toast(`⚠️ ${ok} OK / ${fail} con error`,'warn');
+}
+
+// ══════════════════════════════════════════════
+// UPDATE CARD UI
+// ══════════════════════════════════════════════
+function getWeatherDesc(code){
+  if(code===0) return 'Despejado';
+  if(code<=3)  return 'Parcialmente nublado';
+  if(code<=48) return 'Neblina';
+  if(code<=55) return 'Llovizna';
+  if(code<=65) return 'Lluvia';
+  if(code<=75) return 'Nevada';
+  if(code<=82) return 'Chubascos';
+  if(code<=99) return 'Tormenta';
+  return 'Variable';
+}
+
+// ══════════════════════════════════════════════
+// FORECAST 24HS
+// ══════════════════════════════════════════════
+function getWeatherIcon(tempC, rainMm, windKmh){
+  if(rainMm >= 5)   return '🌧️';
+  if(rainMm >= 1)   return '🌦️';
+  if(windKmh >= 60) return '💨';
+  if(tempC >= 35)   return '🔥';
+  if(tempC <= 0)    return '🥶';
+  return '⛅';
+}
+
+function renderForecast24(sectorId, slots){
+  const el = document.getElementById('forecast-'+sectorId);
+  if(!el || !slots.length) return;
+  el.innerHTML = slots.map(s=>{
+    const hour = s.time
+      ? s.time.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
+      : '—';
+    const icon = getWeatherIcon(s.temp, s.rain, s.wind);
+    const rainClass = s.rain > 0 ? '' : 'no-rain';
+    return `
+      <div class="forecast-slot">
+        <div class="forecast-slot-time">${hour}</div>
+        <div class="forecast-slot-icon">${icon}</div>
+        <div class="forecast-slot-temp">${s.temp}°</div>
+        <div class="forecast-slot-rain ${rainClass}">${s.rain}mm</div>
+      </div>`;
+  }).join('');
+}
+
+function updateCard(sector, cur){
+  const temp = cur.temperature_2m;
+  const rain = cur.precipitation;
+  const wind = cur.wind_speed_10m;
+  const hum  = cur.relative_humidity_2m;
+  const code = cur.weather_code;
+  const t = getThr(sector.id);
+
+  // Alerts
+  const alerts = [];
+  if(t.enHot   && temp >= t.hot)  alerts.push('hot');
+  if(t.enCold  && temp <= t.cold) alerts.push('cold');
+  if(t.enRain  && rain >= t.rain) alerts.push('rain');
+  if(t.enStorm && wind >= t.wind) alerts.push('storm');
+
+  // Card border
+  const card = document.getElementById('card-'+sector.id);
+  card.className = 'sector-card' + (alerts.length ? ' alert-'+alerts[0] : '');
+
+  // Chips
+  const chips = document.getElementById('chips-'+sector.id);
+  if(alerts.length===0){
+    chips.innerHTML = '<span class="chip chip-ok">✓ Sin alertas</span>';
+  } else {
+    chips.innerHTML = alerts.map(a=>{
+      const labels={hot:'🔥 Calor',cold:'🥶 Frío',rain:'🌧️ Lluvia',storm:'🌪️ Viento'};
+      return `<span class="chip chip-${a}">${labels[a]}</span>`;
+    }).join('');
+  }
+
+  // Weather stats
+  document.getElementById('weather-'+sector.id).innerHTML = `
+    <div class="w-stat">
+      <span class="w-stat-icon">${temp>30?'🔥':temp<5?'🥶':'🌡️'}</span>
+      <div class="w-stat-val" style="color:${temp>=t.hot?'var(--hot)':temp<=t.cold?'var(--cold)':'var(--ink)'}">${temp.toFixed(1)}°C</div>
+      <div class="w-stat-label">Temperatura</div>
+    </div>
+    <div class="w-stat">
+      <span class="w-stat-icon">🌧️</span>
+      <div class="w-stat-val" style="color:${rain>=t.rain?'var(--rain)':'var(--ink)'}">${rain.toFixed(1)} mm</div>
+      <div class="w-stat-label">Precipitación</div>
+    </div>
+    <div class="w-stat">
+      <span class="w-stat-icon">💨</span>
+      <div class="w-stat-val" style="color:${wind>=t.wind?'var(--storm)':'var(--ink)'}">${wind.toFixed(0)} km/h</div>
+      <div class="w-stat-label">Viento</div>
+    </div>
+    <div class="w-stat">
+      <span class="w-stat-icon">💧</span>
+      <div class="w-stat-val">${hum}%</div>
+      <div class="w-stat-label">Humedad</div>
+    </div>
+  `;
+
+  document.getElementById('status-'+sector.id).textContent = cur.weather_desc || getWeatherDesc(code);
+  renderForecast24(sector.id, cur.forecast24 || []);
+}
+
+// ══════════════════════════════════════════════
+// ALERTS CHECK
+// ══════════════════════════════════════════════
+function checkAndAlert(){
+  let anyAlert = false;
+  SECTORS.forEach(s=>{
+    const cur = weatherData[s.id];
+    if(!cur) return;
+    const alerts = getAlerts(cur, sector.id);
+    if(alerts.length) anyAlert = true;
+  });
+  if(anyAlert) toast('⚠️ Se detectaron condiciones de alerta en algunos sectores','warn');
+}
+
+function getAlerts(cur, sectorId){
+  const t = getThr(sectorId);
+  const alerts = [];
+  if(t.enHot   && cur.temperature_2m >= t.hot)  alerts.push({type:'hot',  label:'Calor extremo', val:`${cur.temperature_2m.toFixed(1)}°C`});
+  if(t.enCold  && cur.temperature_2m <= t.cold) alerts.push({type:'cold', label:'Frío extremo',  val:`${cur.temperature_2m.toFixed(1)}°C`});
+  if(t.enRain  && cur.precipitation  >= t.rain) alerts.push({type:'rain', label:'Lluvia excesiva',val:`${cur.precipitation.toFixed(1)}mm/h`});
+  if(t.enStorm && cur.wind_speed_10m >= t.wind) alerts.push({type:'storm',label:'Viento fuerte', val:`${cur.wind_speed_10m.toFixed(0)}km/h`});
+  return alerts;
+}
+
+// ══════════════════════════════════════════════
+// WHATSAPP
+// ══════════════════════════════════════════════
+function buildMessage(sectorName, cur, alerts){
+  const time = new Date().toLocaleString('es-AR',{
+    day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'
+  });
+  let msg = `🚨 *ALERTA METEOROLÓGICA — UP Salta*\n`;
+  msg += `📍 Sector: *${sectorName}*\n`;
+  msg += `🕐 ${time}\n\n`;
+  msg += `📊 *Condiciones actuales:*\n`;
+  msg += `🌡️ Temperatura: *${cur.temperature_2m.toFixed(1)}°C*\n`;
+  msg += `🌧️ Precipitación: *${cur.precipitation.toFixed(1)} mm/h*\n`;
+  msg += `💨 Viento: *${cur.wind_speed_10m.toFixed(0)} km/h*\n`;
+  msg += `💧 Humedad: *${cur.relative_humidity_2m}%*\n\n`;
+  if(alerts.length){
+    msg += `⚠️ *Alertas activas:*\n`;
+    alerts.forEach(a=> msg += `• ${a.label}: ${a.val}\n`);
+  } else {
+    msg += `✅ Sin alertas. Condiciones normales.\n`;
+  }
+  msg += `\n_Sistema AlertaMet — UP Salta_`;
+  return msg;
+}
+
+function sendAlertSector(sectorId){
+  const sector = SECTORS.find(s=>s.id===sectorId);
+  const cur = weatherData[sectorId];
+  if(!contacts.length){ toast('No hay contactos cargados','err'); return; }
+  if(!cur){ toast('Datos no disponibles aún','err'); return; }
+
+  const alerts = getAlerts(cur, sectorId);
+  const msg = buildMessage(sector.name, cur, alerts);
+
+  contacts.forEach(c=>{
+    const phone = c.phone.replace(/\D/g,'');
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    window.open(url,'_blank');
+  });
+
+  addLog(`Alerta enviada por sector: ${sector.name} → ${contacts.length} contacto(s)`);
+  toast(`WhatsApp abierto para ${contacts.length} contacto(s)`,'ok');
+}
+
+function sendAlertAll(){
+  if(!contacts.length){ toast('No hay contactos cargados','err'); return; }
+
+  // Build summary of all sectors with alerts
+  const alertSectors = SECTORS.filter(s=>{
+    const cur = weatherData[s.id];
+    return cur && getAlerts(cur, s.id).length > 0;
+  });
+
+  if(!alertSectors.length){
+    // Send status report
+    const time = new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    let msg = `📊 *REPORTE METEOROLÓGICO — UP Salta*\n🕐 ${time}\n\n✅ Todos los sectores sin alertas.\n\n`;
+    SECTORS.forEach(s=>{
+      const cur = weatherData[s.id];
+      if(cur) msg += `📍 ${s.name}: ${cur.temperature_2m.toFixed(1)}°C | ${cur.wind_speed_10m.toFixed(0)}km/h viento | ${cur.precipitation.toFixed(1)}mm lluvia\n`;
+    });
+    msg += `\n_Sistema AlertaMet — UP Salta_`;
+    contacts.forEach(c=>{
+      const phone = c.phone.replace(/\D/g,'');
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+    });
+    addLog(`Reporte general enviado a ${contacts.length} contacto(s). Sin alertas activas.`);
+    toast('Reporte enviado a todos los contactos','ok');
+    return;
+  }
+
+  // Build alert message for all sectors
+  const time = new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  let msg = `🚨 *ALERTAS METEOROLÓGICAS — UP Salta*\n🕐 ${time}\n\n`;
+  alertSectors.forEach(s=>{
+    const cur = weatherData[s.id];
+    const alerts = getAlerts(cur);
+    const salerts = getAlerts(cur, s.id);
+    msg += `📍 *${s.name}*\n`;
+    salerts.forEach(a=> msg += `  ⚠️ ${a.label}: ${a.val}\n`);
+    msg += `  🌡️ ${cur.temperature_2m.toFixed(1)}°C | 💨 ${cur.wind_speed_10m.toFixed(0)}km/h | 🌧️ ${cur.precipitation.toFixed(1)}mm\n\n`;
+  });
+  msg += `_Sistema AlertaMet — UP Salta_`;
+
+  contacts.forEach(c=>{
+    const phone = c.phone.replace(/\D/g,'');
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+  });
+
+  addLog(`Alertas enviadas (${alertSectors.length} sectores) a ${contacts.length} contacto(s)`);
+  toast(`Alertas enviadas para ${alertSectors.length} sector(es)`,'ok');
+}
+
+// ══════════════════════════════════════════════
+// AUTO REFRESH
+// ══════════════════════════════════════════════
+function setAutoRefresh(){
+  clearInterval(autoInterval);
+  clearInterval(countdownTimer);
+  document.getElementById('countdown-label').textContent = '';
+
+  const mins = parseInt(document.getElementById('refresh-interval').value);
+  if(!mins) return;
+
+  countdownSecs = mins * 60;
+  updateCountdown();
+  countdownTimer = setInterval(()=>{
+    countdownSecs--;
+    if(countdownSecs <= 0){
+      countdownSecs = mins * 60;
+      refreshAll();
+    }
+    updateCountdown();
+  }, 1000);
+}
+
+function updateCountdown(){
+  const m = Math.floor(countdownSecs/60);
+  const s = countdownSecs % 60;
+  document.getElementById('countdown-label').textContent =
+    `Próxima actualización: ${m}:${String(s).padStart(2,'0')}`;
+}
+
+// ══════════════════════════════════════════════
+// CONTACTS
+// ══════════════════════════════════════════════
+function renderContacts(){
+  const list = document.getElementById('contacts-list');
+  document.getElementById('contact-count').textContent = `${contacts.length} contacto(s)`;
+  if(!contacts.length){
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);font-size:14px;">No hay contactos. Agregá el primero.</div>';
+    return;
+  }
+  list.innerHTML = contacts.map(c=>`
+    <div class="contact-row">
+      <div class="contact-info">
+        <div class="contact-avatar">${c.name[0].toUpperCase()}</div>
+        <div>
+          <div class="contact-name">${c.name}</div>
+          <div class="contact-phone">${c.phone}</div>
+        </div>
+      </div>
+      <div class="contact-actions">
+        <button class="btn-whatsapp" onclick="testWhatsapp('${c.id}')">
+          📱 Probar
+        </button>
+        <button class="btn btn-danger-ghost btn-sm" onclick="removeContact('${c.id}')">
+          🗑️ Eliminar
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addContact(){
+  const name  = document.getElementById('new-name').value.trim();
+  const phone = document.getElementById('new-phone').value.trim();
+  if(!name || !phone){ toast('Completá nombre y teléfono','err'); return; }
+  contacts.push({id:'c'+Date.now(), name, phone});
+  saveContacts();
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-phone').value = '';
+  renderContacts();
+  toast(`${name} agregado correctamente`,'ok');
+}
+
+function removeContact(id){
+  contacts = contacts.filter(c=>c.id!==id);
+  saveContacts();
+  renderContacts();
+  toast('Contacto eliminado','ok');
+}
+
+function testWhatsapp(id){
+  const c = contacts.find(x=>x.id===id);
+  const phone = c.phone.replace(/\D/g,'');
+  const msg = `✅ *Prueba AlertaMet — UP Salta*\nEste es un mensaje de prueba del sistema de alertas meteorológicas.`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+function saveContacts(){
+  localStorage.setItem('upsalta-contacts', JSON.stringify(contacts));
+}
+
+// ══════════════════════════════════════════════
+// THRESHOLDS
+// ══════════════════════════════════════════════
+function renderThresholds(){
+  const acc = document.getElementById('thresholds-accordion');
+  if(!acc) return;
+  acc.innerHTML = SECTORS.map(s=>{
+    const t = getThr(s.id);
+    return `
+    <div class="thr-sector-block" id="thrblock-${s.id}">
+      <div class="thr-sector-header" onclick="toggleThrBlock('${s.id}')">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:16px;">📍</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;">${s.name}</div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:1px;">
+              🔥 Calor: ${t.hot}°C &nbsp;|&nbsp; 🥶 Frío: ${t.cold}°C &nbsp;|&nbsp; 🌧️ Lluvia: ${t.rain}mm &nbsp;|&nbsp; 💨 Viento: ${t.wind}km/h
+            </div>
+          </div>
+        </div>
+        <span class="thr-chevron" id="chev-${s.id}">▼</span>
+      </div>
+      <div class="thr-sector-body" id="thrbody-${s.id}" style="display:none;">
+        <div class="thresholds-grid" style="margin-bottom:0;">
+          <div class="threshold-card">
+            <div class="threshold-title"><span class="threshold-icon">🔥</span>
+              <div><div class="threshold-name">Calor Extremo</div><div class="threshold-desc">Temp. máxima de alerta</div></div>
+            </div>
+            <div class="threshold-field"><label>Umbral</label>
+              <div class="threshold-input-row">
+                <input type="number" class="threshold-input" id="hot-${s.id}" value="${t.hot}"><span class="threshold-unit">°C</span>
+              </div>
+            </div>
+            <div class="threshold-toggle">
+              <label class="toggle"><input type="checkbox" id="enHot-${s.id}" ${t.enHot?'checked':''}><span class="toggle-slider"></span></label>
+              <span class="toggle-label">Activa</span>
+            </div>
+          </div>
+          <div class="threshold-card">
+            <div class="threshold-title"><span class="threshold-icon">🥶</span>
+              <div><div class="threshold-name">Frío Extremo</div><div class="threshold-desc">Temp. mínima de alerta</div></div>
+            </div>
+            <div class="threshold-field"><label>Umbral</label>
+              <div class="threshold-input-row">
+                <input type="number" class="threshold-input" id="cold-${s.id}" value="${t.cold}"><span class="threshold-unit">°C</span>
+              </div>
+            </div>
+            <div class="threshold-toggle">
+              <label class="toggle"><input type="checkbox" id="enCold-${s.id}" ${t.enCold?'checked':''}><span class="toggle-slider"></span></label>
+              <span class="toggle-label">Activa</span>
+            </div>
+          </div>
+          <div class="threshold-card">
+            <div class="threshold-title"><span class="threshold-icon">🌧️</span>
+              <div><div class="threshold-name">Lluvia Excesiva</div><div class="threshold-desc">Precipitaciones/hora</div></div>
+            </div>
+            <div class="threshold-field"><label>Umbral</label>
+              <div class="threshold-input-row">
+                <input type="number" class="threshold-input" id="rain-${s.id}" value="${t.rain}"><span class="threshold-unit">mm/h</span>
+              </div>
+            </div>
+            <div class="threshold-toggle">
+              <label class="toggle"><input type="checkbox" id="enRain-${s.id}" ${t.enRain?'checked':''}><span class="toggle-slider"></span></label>
+              <span class="toggle-label">Activa</span>
+            </div>
+          </div>
+          <div class="threshold-card">
+            <div class="threshold-title"><span class="threshold-icon">🌪️</span>
+              <div><div class="threshold-name">Viento / Tormenta</div><div class="threshold-desc">Velocidad del viento</div></div>
+            </div>
+            <div class="threshold-field"><label>Umbral</label>
+              <div class="threshold-input-row">
+                <input type="number" class="threshold-input" id="wind-${s.id}" value="${t.wind}"><span class="threshold-unit">km/h</span>
+              </div>
+            </div>
+            <div class="threshold-toggle">
+              <label class="toggle"><input type="checkbox" id="enStorm-${s.id}" ${t.enStorm?'checked':''}><span class="toggle-slider"></span></label>
+              <span class="toggle-label">Activa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleThrBlock(sid){
+  const body = document.getElementById('thrbody-'+sid);
+  const chev = document.getElementById('chev-'+sid);
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  chev.textContent = open ? '▼' : '▲';
+}
+
+function saveThresholds(){
+  SECTORS.forEach(s=>{
+    const hot   = parseFloat(document.getElementById('hot-'+s.id)?.value  ?? getThr(s.id).hot);
+    const cold  = parseFloat(document.getElementById('cold-'+s.id)?.value ?? getThr(s.id).cold);
+    const rain  = parseFloat(document.getElementById('rain-'+s.id)?.value ?? getThr(s.id).rain);
+    const wind  = parseFloat(document.getElementById('wind-'+s.id)?.value ?? getThr(s.id).wind);
+    const enHot   = document.getElementById('enHot-'+s.id)?.checked  ?? true;
+    const enCold  = document.getElementById('enCold-'+s.id)?.checked ?? true;
+    const enRain  = document.getElementById('enRain-'+s.id)?.checked ?? true;
+    const enStorm = document.getElementById('enStorm-'+s.id)?.checked?? true;
+    sectorThresholds[s.id] = {hot,cold,rain,wind,enHot,enCold,enRain,enStorm};
+  });
+  localStorage.setItem('upsalta-thresholds', JSON.stringify(sectorThresholds));
+  renderThresholds();
+  SECTORS.forEach(s=>{ if(weatherData[s.id]) updateCard(s, weatherData[s.id]); });
+  toast('Umbrales guardados y aplicados','ok');
+}
+
+function resetAllThresholds(){
+  sectorThresholds = JSON.parse(JSON.stringify(DEFAULT_THR));
+  localStorage.removeItem('upsalta-thresholds');
+  renderThresholds();
+  toast('Umbrales restaurados a valores por defecto','ok');
+}
+
+// ══════════════════════════════════════════════
+// LOG
+// ══════════════════════════════════════════════
+function addLog(msg){
+  const time = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  alertLog.unshift({time, msg, date: new Date().toLocaleDateString('es-AR')});
+  if(alertLog.length > 100) alertLog = alertLog.slice(0,100);
+  localStorage.setItem('upsalta-log', JSON.stringify(alertLog));
+  renderLog();
+}
+
+function renderLog(){
+  const list = document.getElementById('log-list');
+  if(!alertLog.length){
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--ink3);font-size:14px;">No hay alertas registradas aún</div>';
+    return;
+  }
+  list.innerHTML = alertLog.map(l=>`
+    <div class="log-item">
+      <span class="log-icon">📋</span>
+      <div style="flex:1"><div class="log-msg">${l.msg}</div><div style="font-size:11px;color:var(--ink3);margin-top:3px;">${l.date}</div></div>
+      <span class="log-time">${l.time}</span>
+    </div>
+  `).join('');
+}
+
+function clearLog(){
+  alertLog = [];
+  localStorage.removeItem('upsalta-log');
+  renderLog();
+  toast('Historial limpiado','ok');
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function toast(msg, type='ok'){
+  const icons = {ok:'✅',warn:'⚠️',err:'❌'};
+  const t = document.createElement('div');
+  t.className = `toast-item ${type}`;
+  t.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  document.getElementById('toast').appendChild(t);
+  setTimeout(()=> t.remove(), 3500);
+}
+
+// ══════════════════════════════════════════════
+// MAP — Windy Embed
+// ══════════════════════════════════════════════
+let windyLayer = 'wind';
+
+function setWindyLayer(layer){
+  windyLayer = layer;
+  document.querySelectorAll('.map-layer-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  const layerMap = { wind:'wind', rain:'rain', temp:'temp', clouds:'clouds' };
+  const iframe = document.getElementById('windy-iframe');
+  const base = `https://embed.windy.com/embed2.html?lat=-24.5&lon=-65.5&width=100%&height=550&zoom=7&level=surface&overlay=${layerMap[layer]}&product=ecmwf&menu=&message=true&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`;
+  iframe.src = base;
+}
+
+function initMap(){
+  // Windy iframe is already in HTML, just update sector list
+  updateMapMarkers();
+}
+
+function updateMapMarkers(){
+  const list = document.getElementById('map-sector-list');
+  if(!list) return;
+  list.innerHTML = SECTORS.map(s=>{
+    const cur = weatherData[s.id];
+    const hasAlert = cur && getAlerts(cur, s.id).length > 0;
+    const color = !cur ? '#64748b' : hasAlert ? '#ef4444' : '#22c55e';
+    const label = !cur ? 'Sin datos' : hasAlert ? getAlerts(cur,s.id).map(a=>a.label).join(', ') : 'OK';
+    const temp  = cur ? `${cur.temperature_2m.toFixed(1)}°C` : '—';
+    return `
+      <div class="map-sector-chip">
+        <div class="map-sector-dot" style="background:${color}"></div>
+        <span style="font-weight:600;">📍 ${s.name}</span>
+        <span style="color:var(--ink3);">${temp}</span>
+        <span style="color:${color};font-size:11px;">${label}</span>
+      </div>`;
+  }).join('');
+}
+
+// Map init triggered from showTab above
+
+// ══════════════════════════════════════════════
+// ALARM — Web Audio API
+// ══════════════════════════════════════════════
+let alarmEnabled = true;
+let alarmCtx = null;
+let alarmInterval = null;
+let alarmSounding = false;
+
+function getAudioCtx(){
+  if(!alarmCtx) alarmCtx = new (window.AudioContext||window.webkitAudioContext)();
+  return alarmCtx;
+}
+
+function playBeep(freq=880, dur=0.3, vol=0.4){
+  try{
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+dur);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+dur);
+  } catch(e){ console.warn('Audio error:',e); }
+}
+
+function playAlarmSound(){
+  playBeep(880,0.15,0.5);
+  setTimeout(()=>playBeep(1100,0.15,0.5),200);
+  setTimeout(()=>playBeep(880,0.15,0.5),400);
+}
+
+function testAlarm(){ playAlarmSound(); toast('🔊 Probando alarma sonora','ok'); }
+
+function triggerAlarm(){
+  if(!alarmEnabled || alarmSounding) return;
+  alarmSounding = true;
+  document.querySelector('header').classList.add('alarm-sounding');
+  alarmInterval = setInterval(playAlarmSound, 3000);
+  playAlarmSound();
+  toast('🚨 ¡ALERTA ACTIVA! Condiciones peligrosas detectadas','err');
+}
+
+function stopAlarm(){
+  alarmSounding = false;
+  clearInterval(alarmInterval);
+  document.querySelector('header').classList.remove('alarm-sounding');
+  toast('🔇 Alarma silenciada','ok');
+}
+
+function toggleAlarm(){
+  alarmEnabled = document.getElementById('alarm-toggle').checked;
+  document.getElementById('alarm-on-label').textContent = alarmEnabled ? 'Activada' : 'Desactivada';
+  document.getElementById('alarm-on-label').style.color = alarmEnabled ? 'var(--ok)' : 'var(--danger)';
+  if(!alarmEnabled) stopAlarm();
+}
+
+// Hook into checkAndAlert
+function checkAndAlert(){
+  let anyAlert = false;
+  SECTORS.forEach(s=>{
+    const cur = weatherData[s.id];
+    if(!cur) return;
+    const alerts = getAlerts(cur, s.id);
+    if(alerts.length) anyAlert = true;
+  });
+  if(anyAlert){
+    toast('⚠️ Se detectaron condiciones de alerta en algunos sectores','warn');
+    triggerAlarm();
+  } else {
+    stopAlarm();
+  }
+  updateMapMarkers();
+}
+
+// ══════════════════════════════════════════════
+// EXPORT — Excel & CSV
+// ══════════════════════════════════════════════
+function buildExportRows(){
+  const time = new Date().toLocaleString('es-AR');
+  return SECTORS.map(s=>{
+    const cur = weatherData[s.id];
+    const alerts = cur ? getAlerts(cur, s.id).map(a=>a.label).join(', ') : '—';
+    return {
+      'Sector': s.name,
+      'Latitud': s.lat,
+      'Longitud': s.lon,
+      'Temperatura (°C)': cur ? cur.temperature_2m.toFixed(1) : '—',
+      'Precipitación (mm/h)': cur ? cur.precipitation.toFixed(1) : '—',
+      'Viento (km/h)': cur ? cur.wind_speed_10m.toFixed(0) : '—',
+      'Humedad (%)': cur ? cur.relative_humidity_2m : '—',
+      'Condición': cur ? (cur.weather_desc||'—') : '—',
+      'Alertas Activas': alerts || 'Sin alertas',
+      'Fecha/Hora': time
+    };
+  });
+}
+
+function exportExcel(){
+  if(!window.XLSX){ toast('Librería no cargada aún','err'); return; }
+  const rows = buildExportRows();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{wch:25},{wch:10},{wch:10},{wch:16},{wch:20},{wch:14},{wch:13},{wch:20},{wch:30},{wch:22}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'AlertaMet UP Salta');
+  const date = new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb, `AlertaMet_UPSalta_${date}.xlsx`);
+  addLog('Reporte Excel exportado');
+  toast('📊 Excel descargado correctamente','ok');
+}
+
+function exportCSV(){
+  const rows = buildExportRows();
+  const headers = Object.keys(rows[0]);
+  const csv = [headers.join(','), ...rows.map(r=>headers.map(h=>`"${r[h]}"`).join(','))].join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=`AlertaMet_UPSalta_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  addLog('Reporte CSV exportado');
+  toast('📄 CSV descargado correctamente','ok');
+}
+
+
+// ══════════════════════════════════════════════
+// SECTORES — info extendida con ramal y provincia
+// ══════════════════════════════════════════════
+const SECTOR_INFO = {
+  s1:  { provincia:'Salta',  ramal:'C'             },
+  s3:  { provincia:'Salta',  ramal:'C / C12'        },
+  s4:  { provincia:'Salta',  ramal:'C15'            },
+  s5:  { provincia:'Salta',  ramal:'C15'            },
+  s6:  { provincia:'Salta',  ramal:'C'              },
+  s7:  { provincia:'Jujuy',  ramal:'C'              },
+  s8:  { provincia:'Jujuy',  ramal:'C15'            },
+  s9:  { provincia:'Salta',  ramal:'C14'    },
+  s11: { provincia:'Salta',  ramal:'C14'    },
+  s12: { provincia:'Salta',  ramal:'C14'    },
+  s13: { provincia:'Salta',  ramal:'C14'    },
+  s18: { provincia:'Salta',  ramal:'C'              },
+  s19: { provincia:'Salta',  ramal:'C'              },
+  s20: { provincia:'Salta',  ramal:'C14'            },
+  s21: { provincia:'Salta',  ramal:'C14'            },
+  s22: { provincia:'Salta',  ramal:'C14'            },
+  s23: { provincia:'Salta',  ramal:'C'              },
+  s24: { provincia:'Salta',  ramal:'C15'            },
+  s25: { provincia:'Salta',  ramal:'C15'            },
+  s14: { provincia:'Jujuy',  ramal:'C15'            },
+  s15: { provincia:'Jujuy',  ramal:'C15'            },
+  s16: { provincia:'Jujuy',  ramal:'C15'            },
+  s17: { provincia:'Jujuy',  ramal:'C15'            },
+};
+
+// Accumulated rain per sector per period (stored in memory, updated on refresh)
+let rainAccum = {};   // { s1: { p1: mm, p2: mm }, ... }
+let reportAutoTimer = null;
+
+// ── DATE HELPERS ──
+function fmtDate(d){ return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function daysAgoStr(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+function daysAheadStr(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+
+function initReportDates(){
+  // P1: last 7 days (real), P2: next 7 days (projected)
+  document.getElementById('p1-start').value = daysAgoStr(7);
+  document.getElementById('p1-end').value   = todayStr();
+  document.getElementById('p2-start').value = todayStr();
+  document.getElementById('p2-end').value   = daysAheadStr(7);
+}
+
+// ── FETCH RAIN ACCUMULATION from Open-Meteo (works when hosted) ──
+// Falls back to current precipitation * hours as estimate when offline
+async function fetchRainPeriod(sector, dateStart, dateEnd){
+  try{
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${sector.lat}&longitude=${sector.lon}&daily=precipitation_sum&start_date=${dateStart}&end_date=${dateEnd}&timezone=America%2FArgentina%2FSalta`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const total = (data.daily?.precipitation_sum||[]).reduce((a,b)=>a+(b||0),0);
+    return parseFloat(total.toFixed(1));
+  } catch(e){
+    // Fallback: use current precipitation * number of days as rough estimate
+    const cur = weatherData[sector.id];
+    if(cur){
+      const d1=new Date(dateStart), d2=new Date(dateEnd);
+      const days = Math.max(1, Math.round((d2-d1)/(1000*60*60*24)));
+      return parseFloat((cur.precipitation * days * 0.3).toFixed(1)); // rough estimate
+    }
+    return 0;
+  }
+}
+
+// ── ALERT STATE CALCULATION ──
+function calcAlertState(totalMm){
+  if(totalMm < 20)  return { label:'Bajo',        cls:'alerta-bajo'        };
+  if(totalMm < 50)  return { label:'Moderado',     cls:'alerta-moderado'    };
+  if(totalMm < 80)  return { label:'Alto',         cls:'alerta-alto'        };
+  return               { label:'Ascendente',    cls:'alerta-ascendente'  };
+}
+
+// ── GENERATE REPORT ──
+async function generateReport(){
+  const p1s = document.getElementById('p1-start').value;
+  const p1e = document.getElementById('p1-end').value;
+  const p2s = document.getElementById('p2-start').value;
+  const p2e = document.getElementById('p2-end').value;
+  if(!p1s||!p1e||!p2s||!p2e){ toast('Completá los períodos','err'); return; }
+
+  // Update header labels
+  const fmt = v => v.split('-').reverse().join('/');
+  document.getElementById('th-p1').innerHTML = `${fmt(p1s)} al ${fmt(p1e)}<br><span style="font-weight:400;font-size:10px;">(Real mm)</span>`;
+  document.getElementById('th-p2').innerHTML = `${fmt(p2s)} al ${fmt(p2e)}<br><span style="font-weight:400;font-size:10px;">(Proyectado mm)</span>`;
+
+  const tbody = document.getElementById('report-tbody');
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--ink3);">⏳ Calculando precipitaciones...</td></tr>`;
+
+  // Fetch rain for all sectors
+  const rows = [];
+  for(const s of SECTORS){
+    const info = SECTOR_INFO[s.id] || {provincia:'Salta',ramal:'—'};
+    const p1mm = await fetchRainPeriod(s, p1s, p1e);
+    const p2mm = await fetchRainPeriod(s, p2s, p2e);
+    const total = parseFloat((p1mm + p2mm).toFixed(1));
+    const alert = calcAlertState(total);
+    rows.push({ sector:s, info, p1mm, p2mm, total, alert });
+    rainAccum[s.id] = {p1:p1mm, p2:p2mm};
+  }
+
+  // Render table
+  tbody.innerHTML = rows.map(r=>`
+    <tr>
+      <td class="rtd rtd-loc">${r.sector.name}</td>
+      <td class="rtd">${r.info.provincia}</td>
+      <td class="rtd"><b>${r.info.ramal}</b></td>
+      <td class="rtd rtd-num">${r.p1mm}</td>
+      <td class="rtd rtd-num">${r.p2mm}</td>
+      <td class="rtd rtd-num" style="font-size:15px;">${r.total}</td>
+      <td class="rtd ${r.alert.cls}">${r.alert.label}</td>
+    </tr>
+  `).join('');
+
+  const now = new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('report-lastgen').textContent = `Último reporte: ${now}`;
+  addLog(`Reporte quincenal generado (${SECTORS.length} sectores)`);
+  toast('📈 Reporte generado correctamente','ok');
+
+  // Store for export/whatsapp
+  window._lastReportRows = rows;
+  window._lastReportDates = {p1s,p1e,p2s,p2e};
+}
+
+// ── EXPORT REPORT TO EXCEL ──
+function exportReportExcel(){
+  if(!window._lastReportRows){ toast('Generá el reporte primero','err'); return; }
+  if(!window.XLSX){ toast('Librería no cargada','err'); return; }
+  const {p1s,p1e,p2s,p2e} = window._lastReportDates;
+  const fmt = v => v.split('-').reverse().join('/');
+  const headers = ['Localidad','Provincia','Ramal',`${fmt(p1s)} al ${fmt(p1e)} (Real mm)`,`${fmt(p2s)} al ${fmt(p2e)} (Proyectado mm)`,'Total Quincena (Est. mm)','Estado de Alerta'];
+  const data = [headers, ...window._lastReportRows.map(r=>[
+    r.sector.name, r.info.provincia, r.info.ramal, r.p1mm, r.p2mm, r.total, r.alert.label
+  ])];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  // Style header row widths
+  ws['!cols'] = [{wch:24},{wch:10},{wch:14},{wch:22},{wch:24},{wch:22},{wch:16}];
+  // Merge title row? — keep simple
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Reporte UP Salta');
+  XLSX.writeFile(wb, `Reporte_Precipitaciones_UPSalta_${todayStr()}.xlsx`);
+  addLog('Reporte Excel exportado');
+  toast('📊 Excel descargado','ok');
+}
+
+// ── SEND REPORT VIA WHATSAPP ──
+function sendReportWhatsApp(){
+  if(!window._lastReportRows){ toast('Generá el reporte primero','err'); return; }
+  if(!contacts.length){ toast('No hay contactos cargados','err'); return; }
+  const {p1s,p1e,p2s,p2e} = window._lastReportDates;
+  const fmt = v => v.split('-').reverse().join('/');
+  const now = new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  let msg = `📊 *REPORTE QUINCENAL — UP Salta*
+🕐 ${now}
+
+`;
+  msg += `📅 Período 1 (Real): ${fmt(p1s)} al ${fmt(p1e)}
+`;
+  msg += `📅 Período 2 (Proyect.): ${fmt(p2s)} al ${fmt(p2e)}
+
+`;
+  window._lastReportRows.forEach(r=>{
+    const icon = r.alert.cls.includes('bajo')?'🟢':r.alert.cls.includes('moderado')?'🟡':r.alert.cls.includes('alto')?'🔴':'🟣';
+    msg += `${icon} *${r.sector.name}* (${r.info.ramal})
+`;
+    msg += `   Real: ${r.p1mm}mm | Proy: ${r.p2mm}mm | Total: *${r.total}mm* — ${r.alert.label}
+
+`;
+  });
+  msg += `_Sistema AlertaMet — UP Salta_`;
+  contacts.forEach(c=>{
+    const phone = c.phone.replace(/\D/g,'');
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
+  });
+  addLog(`Reporte enviado por WhatsApp a ${contacts.length} contacto(s)`);
+  toast(`📱 Reporte enviado a ${contacts.length} contacto(s)`,'ok');
+}
+
+// ── AUTO REPORT EVERY 30 MIN ──
+function startReportAutoTimer(){
+  clearInterval(reportAutoTimer);
+  reportAutoTimer = setInterval(()=>{
+    if(document.getElementById('panel-reporte').classList.contains('active')){
+      generateReport();
+    }
+  }, 30 * 60 * 1000);
+}
+
+</script>
+<div style="position:fixed;bottom:14px;right:18px;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#f5c842;opacity:.8;pointer-events:none;z-index:9999;text-shadow:0 1px 4px rgba(0,0,0,.8);">By AJGodoy</div>
+</body>
+</html>
