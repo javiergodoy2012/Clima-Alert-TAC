@@ -6,6 +6,8 @@
 <title>Clima Alert TAC — UP Salta</title>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="favicon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0f1117">
 <script>
   (function(){
     const saved = localStorage.getItem('clima-alert-theme');
@@ -14,7 +16,7 @@
   })();
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <style>
   .vision-switch{
     position:fixed;top:12px;left:12px;z-index:10000;
@@ -30,6 +32,7 @@
   @media(max-width:700px){.vision-switch{top:7px;left:7px;min-height:36px;padding:0 11px;font-size:10px}}
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{
+  --side-image-margin:clamp(96px,8vw,150px);
   --bg:#0f1117;--bg2:#161b27;--surface:#1c2333;--surface2:#232d42;
   --border:#2a3550;--border2:#354060;
   --ink:#e8eaf0;--ink2:#a0aec0;--ink3:#64748b;
@@ -47,7 +50,7 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-h
 
 /* Subtle grid bg */
 body::before,body::after{
-  content:'';position:fixed;top:0;bottom:0;width:max(0px,calc((100vw - 1180px)/2));
+  content:'';position:fixed;top:0;bottom:0;width:var(--side-image-margin);
   pointer-events:none;z-index:0;background-repeat:no-repeat;background-size:cover;
   opacity:.38;filter:saturate(1.02) brightness(.78) contrast(1.08);
 }
@@ -86,7 +89,11 @@ body::after{
 .windy-spinner{width:34px;height:34px;margin:0 auto 12px;border:3px solid rgba(255,255,255,.18);border-top-color:#f59e0b;border-radius:50%;animation:spin .8s linear infinite;}
 .windy-note{display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;color:var(--ink2);font-size:12px;line-height:1.5;}
 
-.app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 20px 60px;}
+.app{
+  position:relative;z-index:1;
+  width:calc(100% - (var(--side-image-margin) * 2));
+  max-width:none;margin:0 auto;padding:0 16px 60px;
+}
 
 /* ── HEADER ── */
 header{
@@ -258,6 +265,33 @@ header{
 /* ── CONTACTS ── */
 .contacts-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
 .contacts-title{font-size:18px;font-weight:700;}
+.primary-channel{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  margin-bottom:18px;padding:18px 20px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(37,211,102,0.18),rgba(37,211,102,0.07));
+  border:1px solid rgba(37,211,102,0.42);
+  box-shadow:0 10px 30px rgba(0,0,0,0.12);
+}
+.primary-channel-info{display:flex;align-items:center;gap:14px;min-width:0;}
+.primary-channel-icon{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:#25d366;color:#07130b;font-size:22px;
+  box-shadow:0 6px 18px rgba(37,211,102,0.24);
+}
+.primary-channel-label{
+  font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:#25d366;
+}
+.primary-channel-name{font-size:16px;font-weight:700;margin-top:3px;}
+.primary-channel-copy{font-size:12px;color:var(--ink2);margin-top:3px;}
+.primary-channel-button{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:38px;padding:8px 15px;border-radius:8px;white-space:nowrap;
+  background:#25d366;border:1px solid #25d366;color:#07130b;
+  font-size:12px;font-weight:700;text-decoration:none;transition:all .15s;
+}
+.primary-channel-button:hover{background:#38e476;border-color:#38e476;transform:translateY(-1px);}
 .add-contact-form{
   display:flex;gap:10px;align-items:center;flex-wrap:wrap;
   background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:24px;
@@ -531,6 +565,35 @@ body.modal-open{overflow:hidden;}
   margin-bottom:20px;
 }
 
+/* BOT PRIVADO 24/7 */
+.bot-hero{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-bottom:18px;}
+.bot-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.bot-status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.bot-status-dot{width:12px;height:12px;border-radius:50%;background:#64748b;box-shadow:0 0 0 5px rgba(100,116,139,.12);}
+.bot-status-dot.ok{background:#22c55e;box-shadow:0 0 0 5px rgba(34,197,94,.12);}
+.bot-status-dot.warning{background:#f59e0b;box-shadow:0 0 0 5px rgba(245,158,11,.12);}
+.bot-status-dot.error{background:#ef4444;box-shadow:0 0 0 5px rgba(239,68,68,.12);}
+.bot-title{font-size:18px;font-weight:800;}.bot-copy{font-size:12px;color:var(--ink3);line-height:1.55;margin-top:5px;}
+.bot-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px;}
+.bot-metric{padding:12px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);}
+.bot-metric-label{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink3);}.bot-metric-value{font-size:15px;font-weight:750;margin-top:4px;}
+.bot-alert-list{display:grid;gap:12px;}.bot-alert{background:var(--surface);border:1px solid rgba(239,68,68,.45);border-left:4px solid #ef4444;border-radius:12px;padding:16px;}
+.bot-alert.critical{border-color:rgba(168,85,247,.5);border-left-color:#a855f7;}
+.bot-alert-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;}.bot-alert-ramal{font-size:16px;font-weight:800;}.bot-alert-level{font-size:11px;font-weight:800;text-transform:uppercase;padding:5px 9px;border-radius:999px;background:rgba(239,68,68,.12);color:#fca5a5;}
+.bot-alert-text{font-size:12px;line-height:1.55;color:var(--ink2);margin:10px 0;white-space:pre-line;}.bot-empty{text-align:center;padding:42px 18px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--ink3);}
+.push-card{margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(37,99,235,.13),rgba(6,182,212,.08));border:1px solid rgba(96,165,250,.38);border-radius:14px;padding:18px 20px;}
+.push-info{display:flex;gap:13px;align-items:flex-start;min-width:min(100%,360px);flex:1;}.push-icon{width:43px;height:43px;flex:0 0 43px;border-radius:13px;display:grid;place-items:center;background:#2563eb;color:#fff;font-size:21px;box-shadow:0 8px 20px rgba(37,99,235,.25);}.push-actions{display:flex;gap:8px;flex-wrap:wrap;}.push-status{font-size:12px;color:var(--ink2);line-height:1.45;margin-top:4px;}.push-status.active{color:#86efac}.push-status.error{color:#fca5a5}.push-status.warning{color:#fcd34d}
+
+/* CLIMA BOT — ASISTENTE CONVERSACIONAL PRIVADO */
+.clima-chat-launcher{position:fixed;right:24px;bottom:48px;z-index:10020;width:68px;height:68px;border:0;border-radius:22px;display:grid;place-items:center;cursor:pointer;color:#07111f;background:linear-gradient(145deg,#f8d55d,#f2b91f);box-shadow:0 16px 38px rgba(0,0,0,.38),0 0 0 4px rgba(245,200,66,.16);transition:transform .18s ease,box-shadow .18s ease;}
+.clima-chat-launcher:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 20px 44px rgba(0,0,0,.44),0 0 0 5px rgba(245,200,66,.22);}.clima-chat-launcher:focus-visible{outline:3px solid #fff;outline-offset:3px;}
+.chat-brand-icon{position:relative;width:42px;height:36px;border:3px solid #07111f;border-radius:13px;display:grid;place-items:center;font-size:19px;font-weight:900;line-height:1;}.chat-brand-icon::after{content:'';position:absolute;right:4px;bottom:-8px;width:11px;height:11px;background:#f2bf2e;border-right:3px solid #07111f;border-bottom:3px solid #07111f;transform:skewY(35deg);}.chat-live-dot{position:absolute;right:8px;top:8px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #07111f;}
+.clima-chat-panel{position:fixed;right:24px;bottom:126px;z-index:10019;width:min(410px,calc(100vw - 24px));height:min(640px,calc(100vh - 150px));display:none;grid-template-rows:auto 1fr auto;background:var(--bg2);border:1px solid var(--border2);border-radius:19px;box-shadow:0 28px 80px rgba(0,0,0,.52);overflow:hidden;}.clima-chat-panel.open{display:grid;animation:chat-enter .2s ease-out;}@keyframes chat-enter{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+.chat-header{display:flex;align-items:center;gap:12px;padding:15px 16px;background:linear-gradient(135deg,#13213b,#1c2f50);border-bottom:1px solid var(--border2);}.chat-header-logo{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#f5c842;color:#07111f;font-size:21px;box-shadow:0 5px 16px rgba(0,0,0,.22);}.chat-header-copy{min-width:0;flex:1}.chat-header-title{font-size:15px;font-weight:850;color:#fff}.chat-header-status{font-size:11px;color:#a8b6cb;margin-top:2px;}.chat-close{width:34px;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;font-size:20px;cursor:pointer;}
+.chat-messages{overflow:auto;padding:16px;display:flex;flex-direction:column;gap:11px;scroll-behavior:smooth;}.chat-row{display:flex;gap:8px;align-items:flex-end}.chat-row.user{justify-content:flex-end}.chat-row.bot{justify-content:flex-start;}.chat-avatar{width:27px;height:27px;flex:0 0 27px;border-radius:9px;background:#f5c842;color:#07111f;display:grid;place-items:center;font-size:13px;font-weight:900;}.chat-bubble{max-width:82%;padding:10px 12px;border-radius:14px;font-size:12.5px;line-height:1.48;white-space:pre-line;box-shadow:0 4px 12px rgba(0,0,0,.12);}.chat-row.bot .chat-bubble{background:var(--surface);color:var(--ink);border:1px solid var(--border);border-bottom-left-radius:4px;}.chat-row.user .chat-bubble{background:#275da6;color:#fff;border-bottom-right-radius:4px;}.chat-source{display:block;margin-top:7px;padding-top:6px;border-top:1px solid var(--border);font-size:10px;color:var(--ink3);}
+.chat-typing{display:inline-flex;gap:4px;align-items:center;height:14px}.chat-typing i{width:5px;height:5px;border-radius:50%;background:var(--ink3);animation:typing 1s infinite ease-in-out}.chat-typing i:nth-child(2){animation-delay:.15s}.chat-typing i:nth-child(3){animation-delay:.3s}@keyframes typing{0%,60%,100%{transform:none;opacity:.45}30%{transform:translateY(-3px);opacity:1}}
+.chat-suggestions{display:flex;gap:6px;overflow-x:auto;padding:0 14px 10px;scrollbar-width:none}.chat-suggestions::-webkit-scrollbar{display:none}.chat-suggestion{flex:0 0 auto;border:1px solid var(--border2);background:var(--surface);color:var(--ink2);border-radius:999px;padding:7px 10px;font-size:10.5px;cursor:pointer;}.chat-login{display:block;width:calc(100% - 24px);margin:0 12px 10px;border:1px solid rgba(245,200,66,.5);background:rgba(245,200,66,.12);color:var(--ink);border-radius:11px;padding:10px 12px;font:700 12px/1.2 'Outfit',sans-serif;cursor:pointer;}.chat-login:hover{background:rgba(245,200,66,.2)}.chat-login[hidden]{display:none}.chat-form{display:grid;grid-template-columns:1fr 42px;gap:8px;padding:11px 12px 13px;background:var(--surface);border-top:1px solid var(--border);}.chat-input{min-width:0;border:1px solid var(--border2);background:var(--bg);color:var(--ink);border-radius:11px;padding:10px 12px;font:inherit;font-size:12px;outline:none;}.chat-input:focus{border-color:#f5c842;box-shadow:0 0 0 3px rgba(245,200,66,.12)}.chat-input:disabled{opacity:.58;}.chat-send{border:0;border-radius:11px;background:#f5c842;color:#07111f;font-size:18px;font-weight:900;cursor:pointer;}.chat-send:disabled{opacity:.45;cursor:not-allowed;}
+
 /* Scrollbar */
 ::-webkit-scrollbar{width:6px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
@@ -539,13 +602,18 @@ body.modal-open{overflow:hidden;}
 @media(max-width:600px){
   .sectors-grid{grid-template-columns:1fr;}
   .add-contact-form{flex-direction:column;}
+  .primary-channel{align-items:stretch;flex-direction:column;}
+  .primary-channel-button{width:100%;}
   .form-input{width:100%;}
   .theme-toggle{min-width:42px;}
   .theme-toggle #theme-label{display:none;}
   .windy-shell{height:70vh;min-height:480px;}
+  .bot-hero{grid-template-columns:1fr;}.bot-metrics{grid-template-columns:1fr 1fr;}
+  .clima-chat-launcher{right:14px;bottom:42px;width:60px;height:60px;border-radius:19px;}.clima-chat-panel{right:0;bottom:0;width:100vw;height:min(760px,92vh);border-radius:18px 18px 0 0;}
 }
 @media(max-width:900px){
   body::before,body::after{display:none;}
+  .app{width:100%;padding-right:12px;padding-left:12px;}
   header{justify-content:center;padding-top:16px;}
   .logo{width:100%;justify-content:center;}
   .dashboard-logo{width:88px;height:88px;}
@@ -602,6 +670,7 @@ body.modal-open{overflow:hidden;}
   <button class="tab" onclick="showTab('umbrales')">⚙️ Umbrales</button>
   <button class="tab" onclick="showTab('contactos')">👥 Contactos</button>
   <button class="tab" onclick="showTab('reporte')">📈 Reporte</button>
+  <button class="tab" onclick="showTab('bot',this)">🤖 Bot 24/7</button>
   <button class="tab" onclick="showTab('historial')">📋 Historial</button>
 </div>
 
@@ -734,11 +803,12 @@ body.modal-open{overflow:hidden;}
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
     <div>
       <div style="font-size:18px;font-weight:700;">Umbrales por Sector</div>
-      <div style="font-size:12px;color:var(--ink3);margin-top:3px;">Configurá los límites de alerta para cada localidad individualmente</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:3px;">Valores centralizados que utiliza el bot y reciben todos los usuarios aprobados</div>
+      <div id="threshold-access-copy" style="font-size:12px;color:var(--ink3);margin-top:6px;">Ingresá con una cuenta aprobada para consultar los umbrales.</div>
     </div>
     <div style="display:flex;gap:8px;">
-      <button class="btn btn-ghost btn-sm" onclick="resetAllThresholds()">↺ Restaurar defaults</button>
-      <button class="btn btn-primary" onclick="saveThresholds()">💾 Guardar Todo</button>
+      <button class="btn btn-ghost btn-sm" id="threshold-reset-btn" onclick="resetAllThresholds()" disabled>↺ Restaurar defaults</button>
+      <button class="btn btn-primary" id="threshold-save-btn" onclick="saveThresholds()" disabled>💾 Guardar Todo</button>
     </div>
   </div>
   <div id="thresholds-accordion"></div>
@@ -746,6 +816,19 @@ body.modal-open{overflow:hidden;}
 
 <!-- PANEL: CONTACTOS -->
 <div id="panel-contactos" class="panel">
+  <div class="primary-channel" role="region" aria-label="Comunidad privada de Clima Alert">
+    <div class="primary-channel-info">
+      <div class="primary-channel-icon" aria-hidden="true">📢</div>
+      <div>
+        <div class="primary-channel-label">Comunidad privada</div>
+        <div class="primary-channel-name">Clima Alert · UP Salta</div>
+        <div class="primary-channel-copy">Alertas, reportes y novedades climáticas se centralizan en esta comunidad.</div>
+      </div>
+    </div>
+    <a class="primary-channel-button" href="https://chat.whatsapp.com/GFKC9dXeKAfKVQAL9r8P26" target="_blank" rel="noopener noreferrer" aria-label="Abrir la comunidad privada de Clima Alert en WhatsApp">
+      <span aria-hidden="true">🔒</span> Abrir comunidad
+    </a>
+  </div>
   <div class="contacts-header">
     <div>
       <div class="contacts-title">Contactos WhatsApp</div>
@@ -774,8 +857,8 @@ body.modal-open{overflow:hidden;}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn btn-ghost btn-sm" onclick="generateReport()">🔄 Generar Ahora</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportReportExcel()">📊 Excel</button>
-      <button class="btn btn-primary btn-sm" onclick="sendReportWhatsApp()">📱 WhatsApp</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportReportExcel()">📊 Excel completo · 7 días</button>
+      <button class="btn btn-primary btn-sm" onclick="sendReportWhatsApp()">🔒 Compartir en Comunidad</button>
     </div>
   </div>
   <div class="report-summary" id="report-summary">
@@ -812,12 +895,55 @@ body.modal-open{overflow:hidden;}
   <div class="report-source">Fuente: Open-Meteo · Datos modelados y pronóstico por coordenada. No reemplaza alertas oficiales del SMN ni observaciones de estaciones meteorológicas.</div>
 </div>
 
+<!-- PANEL: BOT PRIVADO 24/7 -->
+<div id="panel-bot" class="panel">
+  <div class="bot-hero">
+    <div class="bot-card">
+      <div class="bot-status-row">
+        <span class="bot-status-dot" id="bot-status-dot" aria-hidden="true"></span>
+        <div>
+          <div class="bot-title" id="bot-status-title">Bot privado en configuración</div>
+          <div class="bot-copy" id="bot-status-detail">Las alertas se mostrarán aquí cuando se active el control permanente en Firebase.</div>
+        </div>
+      </div>
+      <div class="bot-metrics">
+        <div class="bot-metric"><div class="bot-metric-label">Último control</div><div class="bot-metric-value" id="bot-last-run">—</div></div>
+        <div class="bot-metric"><div class="bot-metric-label">Frecuencia</div><div class="bot-metric-value" id="bot-schedule">Cada 30 min</div></div>
+        <div class="bot-metric"><div class="bot-metric-label">Localidades revisadas</div><div class="bot-metric-value" id="bot-checked">—</div></div>
+        <div class="bot-metric"><div class="bot-metric-label">Ramales con alerta</div><div class="bot-metric-value" id="bot-active-count">0</div></div>
+      </div>
+    </div>
+    <div class="bot-card">
+      <div class="bot-title">Funcionamiento 24/7</div>
+      <div class="bot-copy">Opera aunque VisionSite esté cerrado. Consulta las 23 localidades, consolida las novedades por ramal y evita repetir la misma alerta mientras la condición no cambie.</div>
+      <div class="bot-copy" style="margin-top:14px;"><b>Privacidad:</b> los avisos quedan dentro de Firebase y solo pueden verlos usuarios registrados con estado aprobado.</div>
+      <div class="bot-copy" style="margin-top:10px;"><b>WhatsApp:</b> el bot prepara el mensaje; la publicación requiere confirmación humana.</div>
+    </div>
+  </div>
+  <div class="push-card" id="push-card">
+    <div class="push-info">
+      <div class="push-icon" aria-hidden="true">🔔</div>
+      <div><div class="bot-title">Alertas en este teléfono</div><div class="push-status" id="push-status-copy">Ingresá con una cuenta aprobada para activar las notificaciones.</div></div>
+    </div>
+    <div class="push-actions">
+      <button class="btn btn-primary btn-sm" id="push-toggle-btn" type="button" onclick="activateClimaPush()" disabled>Activar notificaciones</button>
+      <button class="btn btn-ghost btn-sm" id="push-test-btn" type="button" onclick="testClimaPush()" hidden>Enviar prueba</button>
+      <button class="btn btn-ghost btn-sm" id="push-disable-btn" type="button" onclick="disableClimaPush()" hidden>Desactivar</button>
+    </div>
+  </div>
+  <div class="log-header">
+    <div><div class="contacts-title">Alertas automáticas activas</div><div class="bot-copy">Resumen operativo por ramal</div></div>
+    <button class="btn btn-ghost btn-sm" type="button" onclick="refreshBotCenter()">🔄 Actualizar</button>
+  </div>
+  <div class="bot-alert-list" id="bot-alert-list"><div class="bot-empty">🔒 Iniciá sesión con una cuenta autorizada para consultar las alertas del bot.</div></div>
+</div>
+
 <!-- PANEL: HISTORIAL -->
 <div id="panel-historial" class="panel">
   <div class="log-header">
     <div class="contacts-title">Historial de Alertas</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn btn-ghost btn-sm" onclick="exportExcel()">📊 Exportar Excel</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportReportExcel()">📊 Excel completo · 7 días</button>
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📄 Exportar CSV</button>
       <button class="btn btn-ghost btn-sm" onclick="clearLog()">🗑️ Limpiar</button>
     </div>
@@ -832,6 +958,13 @@ body.modal-open{overflow:hidden;}
 </div><!-- /app -->
 
 <div id="toast"></div>
+
+<button class="clima-chat-launcher" id="clima-chat-launcher" type="button" onclick="toggleClimaChat()" aria-label="Abrir asistente Clima Bot" aria-controls="clima-chat-panel" aria-expanded="false" title="Preguntarle a Clima Bot"><span class="chat-brand-icon" aria-hidden="true">C</span><span class="chat-live-dot" aria-hidden="true"></span></button>
+<section class="clima-chat-panel" id="clima-chat-panel" aria-label="Asistente meteorológico Clima Bot" aria-hidden="true">
+  <header class="chat-header"><div class="chat-header-logo" aria-hidden="true">💬</div><div class="chat-header-copy"><div class="chat-header-title">Clima Bot</div><div class="chat-header-status" id="chat-header-status">Asistente privado · datos de Clima Alert</div></div><button class="chat-close" type="button" onclick="closeClimaChat()" aria-label="Cerrar chat">×</button></header>
+  <div class="chat-messages" id="chat-messages" role="log" aria-live="polite"></div>
+  <div><div class="chat-suggestions" id="chat-suggestions"><button class="chat-suggestion" type="button" onclick="askSuggestion('¿Cómo está Güemes ahora?')">Güemes ahora</button><button class="chat-suggestion" type="button" onclick="askSuggestion('¿Qué se espera mañana en el ramal C14?')">C14 mañana</button><button class="chat-suggestion" type="button" onclick="askSuggestion('¿Hay alertas activas?')">Alertas activas</button><button class="chat-suggestion" type="button" onclick="askSuggestion('¿Cuánto llovió ayer en Embarcación?')">Lluvia de ayer</button></div><button class="chat-login" id="clima-chat-login" type="button" onclick="signInClimaBot()">🔐 Ingresar con Google</button><form class="chat-form" id="clima-chat-form" onsubmit="submitClimaChat(event)"><input class="chat-input" id="clima-chat-input" type="text" maxlength="180" autocomplete="off" placeholder="Ej.: ¿Cómo estará Pichanal mañana?" aria-label="Pregunta para Clima Bot"><button class="chat-send" id="clima-chat-send" type="submit" aria-label="Enviar pregunta">➤</button></form></div>
+</section>
 
 <script>
 // ══════════════════════════════════════════════
@@ -868,7 +1001,9 @@ const SECTORS = [
 // STATE
 // ══════════════════════════════════════════════
 let weatherData = {};
+const COMMUNITY_URL = 'https://chat.whatsapp.com/GFKC9dXeKAfKVQAL9r8P26';
 const CONTACT_EDITOR_UID = 'pgyrN5bxRuWsnfHTheMfOgkFpJX2';
+const THRESHOLD_ADMIN_UID = 'pgyrN5bxRuWsnfHTheMfOgkFpJX2';
 const DEFAULT_CONTACTS = [
   {id:'c1',name:'Ing. Sagripanti Emanuel',phone:'+54 9 11 5384-4361'},
   {id:'c2',name:'Ing. Skaf Adrian',phone:'+54 9 11 6054-1417'},
@@ -888,6 +1023,8 @@ let autoInterval = null;
 let countdownTimer = null;
 let countdownSecs = 0;
 let refreshInProgress = false;
+let climaChatAuthorized = false;
+let climaChatWelcomed = false;
 const WEATHER_CACHE_KEY = 'upsalta-weather-cache-v1';
 const ARGENTINA_TZ = 'America/Argentina/Salta';
 const REQUEST_TIMEOUT_MS = 12000;
@@ -956,7 +1093,9 @@ const DEFAULT_THR = {
   s16: { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
   s17: { hot:38, cold:3,  rain:20, wind:55, enHot:true, enCold:true, enRain:true, enStorm:true },
 };
-let sectorThresholds = JSON.parse(localStorage.getItem('upsalta-thresholds') || 'null') || JSON.parse(JSON.stringify(DEFAULT_THR));
+let sectorThresholds = JSON.parse(JSON.stringify(DEFAULT_THR));
+let thresholdEditorUser = null;
+let stopThresholdConfig = null;
 function getThr(id){ return sectorThresholds[id] || DEFAULT_THR[id] || {hot:38,cold:2,rain:20,wind:60,enHot:true,enCold:true,enRain:true,enStorm:true}; }
 
 // ══════════════════════════════════════════════
@@ -1089,7 +1228,7 @@ function renderSectors(){
       <div class="card-footer">
         <span class="card-status" id="status-${s.id}">Cargando...</span>
         <button class="btn-send-card" onclick="sendAlertSector('${s.id}')">
-          <span>📱</span> WhatsApp
+          <span>🔒</span> Comunidad
         </button>
       </div>
       <div class="forecast-bar">
@@ -1129,7 +1268,7 @@ async function fetchSector(sector){
     + `&hourly=temperature_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,wind_direction_10m`
     + `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_gusts_10m_max`
     + `&wind_speed_unit=kmh&timezone=${tz}`
-    + `&forecast_days=2&past_days=1`;
+    + `&forecast_days=7&past_days=1`;
 
   // Historical call — ERA5 archive API (measured data, much more accurate than forecast model)
   // Use yesterday as end_date since ERA5 has ~5 day lag; today from forecast fills the gap
@@ -1559,20 +1698,27 @@ function buildMessage(sectorName, cur, alerts){
 function sendAlertSector(sectorId){
   const sector = SECTORS.find(s=>s.id===sectorId);
   const cur = weatherData[sectorId];
-  if(!contacts.length){ toast('No hay contactos cargados','err'); return; }
   if(!cur){ toast('Datos no disponibles aún','err'); return; }
 
   const alerts = getAlerts(cur, sectorId);
   const msg = buildMessage(sector.name, cur, alerts);
 
-  contacts.forEach(c=>{
-    const phone = c.phone.replace(/\D/g,'');
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-    window.open(url,'_blank');
-  });
+  // WhatsApp no permite publicar automáticamente en una comunidad desde una URL.
+  // Copiamos el reporte de la localidad y abrimos la comunidad para pegarlo allí.
+  const helper=document.createElement('textarea');
+  helper.value=msg;
+  helper.setAttribute('readonly','');
+  helper.style.position='fixed';
+  helper.style.opacity='0';
+  document.body.appendChild(helper);
+  helper.select();
+  helper.setSelectionRange(0,helper.value.length);
+  const copied=document.execCommand('copy');
+  document.body.removeChild(helper);
 
-  addLog(`Alerta enviada por sector: ${sector.name} → ${contacts.length} contacto(s)`);
-  toast(`WhatsApp abierto para ${contacts.length} contacto(s)`,'ok');
+  window.open(COMMUNITY_URL,'_blank','noopener,noreferrer');
+  addLog(`Reporte de ${sector.name} preparado para compartir en la Comunidad privada`);
+  toast(copied?`📋 Reporte de ${sector.name} copiado. Pegalo en la Comunidad.`:'Comunidad abierta. Copiá el reporte para compartirlo.','ok');
 }
 
 function sendAlertAll(){
@@ -1755,11 +1901,11 @@ function renderThresholds(){
             </div>
             <div class="threshold-field"><label>Umbral</label>
               <div class="threshold-input-row">
-                <input type="number" class="threshold-input" id="hot-${s.id}" value="${t.hot}"><span class="threshold-unit">°C</span>
+                <input type="number" class="threshold-input" id="hot-${s.id}" value="${t.hot}" ${thresholdEditorUser?'':'disabled'}><span class="threshold-unit">°C</span>
               </div>
             </div>
             <div class="threshold-toggle">
-              <label class="toggle"><input type="checkbox" id="enHot-${s.id}" ${t.enHot?'checked':''}><span class="toggle-slider"></span></label>
+              <label class="toggle"><input type="checkbox" id="enHot-${s.id}" ${t.enHot?'checked':''} ${thresholdEditorUser?'':'disabled'}><span class="toggle-slider"></span></label>
               <span class="toggle-label">Activa</span>
             </div>
           </div>
@@ -1769,25 +1915,25 @@ function renderThresholds(){
             </div>
             <div class="threshold-field"><label>Umbral</label>
               <div class="threshold-input-row">
-                <input type="number" class="threshold-input" id="cold-${s.id}" value="${t.cold}"><span class="threshold-unit">°C</span>
+                <input type="number" class="threshold-input" id="cold-${s.id}" value="${t.cold}" ${thresholdEditorUser?'':'disabled'}><span class="threshold-unit">°C</span>
               </div>
             </div>
             <div class="threshold-toggle">
-              <label class="toggle"><input type="checkbox" id="enCold-${s.id}" ${t.enCold?'checked':''}><span class="toggle-slider"></span></label>
+              <label class="toggle"><input type="checkbox" id="enCold-${s.id}" ${t.enCold?'checked':''} ${thresholdEditorUser?'':'disabled'}><span class="toggle-slider"></span></label>
               <span class="toggle-label">Activa</span>
             </div>
           </div>
           <div class="threshold-card">
             <div class="threshold-title"><span class="threshold-icon">🌧️</span>
-              <div><div class="threshold-name">Lluvia Excesiva</div><div class="threshold-desc">Precipitaciones/hora</div></div>
+              <div><div class="threshold-name">Lluvia Excesiva</div><div class="threshold-desc">Acumulado previsto en 24 horas</div></div>
             </div>
             <div class="threshold-field"><label>Umbral</label>
               <div class="threshold-input-row">
-                <input type="number" class="threshold-input" id="rain-${s.id}" value="${t.rain}"><span class="threshold-unit">mm/h</span>
+                <input type="number" class="threshold-input" id="rain-${s.id}" value="${t.rain}" ${thresholdEditorUser?'':'disabled'}><span class="threshold-unit">mm/24 h</span>
               </div>
             </div>
             <div class="threshold-toggle">
-              <label class="toggle"><input type="checkbox" id="enRain-${s.id}" ${t.enRain?'checked':''}><span class="toggle-slider"></span></label>
+              <label class="toggle"><input type="checkbox" id="enRain-${s.id}" ${t.enRain?'checked':''} ${thresholdEditorUser?'':'disabled'}><span class="toggle-slider"></span></label>
               <span class="toggle-label">Activa</span>
             </div>
           </div>
@@ -1797,11 +1943,11 @@ function renderThresholds(){
             </div>
             <div class="threshold-field"><label>Umbral</label>
               <div class="threshold-input-row">
-                <input type="number" class="threshold-input" id="wind-${s.id}" value="${t.wind}"><span class="threshold-unit">km/h</span>
+                <input type="number" class="threshold-input" id="wind-${s.id}" value="${t.wind}" ${thresholdEditorUser?'':'disabled'}><span class="threshold-unit">km/h</span>
               </div>
             </div>
             <div class="threshold-toggle">
-              <label class="toggle"><input type="checkbox" id="enStorm-${s.id}" ${t.enStorm?'checked':''}><span class="toggle-slider"></span></label>
+              <label class="toggle"><input type="checkbox" id="enStorm-${s.id}" ${t.enStorm?'checked':''} ${thresholdEditorUser?'':'disabled'}><span class="toggle-slider"></span></label>
               <span class="toggle-label">Activa</span>
             </div>
           </div>
@@ -1819,7 +1965,36 @@ function toggleThrBlock(sid){
   chev.textContent = open ? '▼' : '▲';
 }
 
-function saveThresholds(){
+function setThresholdAccess(user){
+  thresholdEditorUser = user?.uid===THRESHOLD_ADMIN_UID ? user : null;
+  const copy=document.getElementById('threshold-access-copy');
+  const save=document.getElementById('threshold-save-btn');
+  const reset=document.getElementById('threshold-reset-btn');
+  if(save)save.disabled=!thresholdEditorUser;
+  if(reset)reset.disabled=!thresholdEditorUser;
+  if(copy)copy.textContent=thresholdEditorUser
+    ? 'Administración habilitada para Lautaro Chavarri. Los cambios se aplican al próximo control del bot.'
+    : user?'Modo consulta. Solo Lautaro Chavarri puede modificar estos valores.':'Ingresá con una cuenta aprobada para consultar los umbrales.';
+  renderThresholds();
+}
+
+function applyCentralThresholds(thresholds){
+  sectorThresholds=Object.fromEntries(Object.entries(DEFAULT_THR).map(([id,defaults])=>[id,{...defaults,...(thresholds?.[id]||{})}]));
+  renderThresholds();
+  SECTORS.forEach(s=>{if(weatherData[s.id])updateCard(s,weatherData[s.id]);});
+}
+
+function startThresholdSync(user){
+  if(stopThresholdConfig){stopThresholdConfig();stopThresholdConfig=null;}
+  setThresholdAccess(user);
+  if(!user){applyCentralThresholds(null);return;}
+  const ref=firebase.app().firestore().collection('configuracion').doc('climaAlertBot');
+  stopThresholdConfig=ref.onSnapshot(snapshot=>applyCentralThresholds(snapshot.data()?.thresholds||null),()=>toast('No se pudieron actualizar los umbrales centrales','err'));
+}
+
+async function saveThresholds(){
+  if(!thresholdEditorUser)return toast('Solo Lautaro Chavarri puede modificar los umbrales','err');
+  const next={};
   SECTORS.forEach(s=>{
     const hot   = parseFloat(document.getElementById('hot-'+s.id)?.value  ?? getThr(s.id).hot);
     const cold  = parseFloat(document.getElementById('cold-'+s.id)?.value ?? getThr(s.id).cold);
@@ -1829,19 +2004,24 @@ function saveThresholds(){
     const enCold  = document.getElementById('enCold-'+s.id)?.checked ?? true;
     const enRain  = document.getElementById('enRain-'+s.id)?.checked ?? true;
     const enStorm = document.getElementById('enStorm-'+s.id)?.checked?? true;
-    sectorThresholds[s.id] = {hot,cold,rain,wind,enHot,enCold,enRain,enStorm};
+    next[s.id] = {hot,cold,rain,wind,enHot,enCold,enRain,enStorm};
   });
-  localStorage.setItem('upsalta-thresholds', JSON.stringify(sectorThresholds));
-  renderThresholds();
-  SECTORS.forEach(s=>{ if(weatherData[s.id]) updateCard(s, weatherData[s.id]); });
-  toast('Umbrales guardados y aplicados','ok');
+  if(Object.values(next).some(t=>![t.hot,t.cold,t.rain,t.wind].every(Number.isFinite)))return toast('Revisá los valores: todos deben ser números válidos','err');
+  try{
+    await firebase.app().firestore().collection('configuracion').doc('climaAlertBot').set({
+      thresholds:next,
+      thresholdsUpdatedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      thresholdsUpdatedBy:thresholdEditorUser.uid,
+      thresholdsUpdatedByName:'Lautaro Chavarri'
+    },{merge:true});
+    toast('Umbrales centrales guardados. El bot los aplicará en el próximo control','ok');
+  }catch(_){toast('No se pudieron guardar los umbrales. Verificá la autorización','err');}
 }
 
-function resetAllThresholds(){
-  sectorThresholds = JSON.parse(JSON.stringify(DEFAULT_THR));
-  localStorage.removeItem('upsalta-thresholds');
-  renderThresholds();
-  toast('Umbrales restaurados a valores por defecto','ok');
+async function resetAllThresholds(){
+  if(!thresholdEditorUser)return toast('Solo Lautaro Chavarri puede restaurar los umbrales','err');
+  applyCentralThresholds(null);
+  await saveThresholds();
 }
 
 // ══════════════════════════════════════════════
@@ -2288,7 +2468,7 @@ async function loadHistoricalChart(){
 }
 
 // ══════════════════════════════════════════════
-// EXPORT — Excel & CSV
+// EXPORT — CSV de respaldo. El único Excel disponible es el reporte completo.
 // ══════════════════════════════════════════════
 function buildExportRows(){
   const time = new Date().toLocaleString('es-AR');
@@ -2308,19 +2488,6 @@ function buildExportRows(){
       'Fecha/Hora': time
     };
   });
-}
-
-function exportExcel(){
-  if(!window.XLSX){ toast('Librería no cargada aún','err'); return; }
-  const rows = buildExportRows();
-  const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{wch:25},{wch:10},{wch:10},{wch:16},{wch:20},{wch:14},{wch:13},{wch:20},{wch:30},{wch:22}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'AlertaMet UP Salta');
-  const date = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `AlertaMet_UPSalta_${date}.xlsx`);
-  addLog('Reporte Excel exportado');
-  toast('📊 Excel descargado correctamente','ok');
 }
 
 function exportCSV(){
@@ -2368,7 +2535,10 @@ const SECTOR_INFO = {
 
 let reportAutoTimer = null;
 
-function todayStr(){ return new Date().toISOString().slice(0,10); }
+function todayStr(){
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'America/Argentina/Salta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
 function initReportDates(){ /* Se conserva por compatibilidad con versiones anteriores. */ }
 function reportRound(value, decimals=1){ return Number.isFinite(Number(value)) ? Number(value).toFixed(decimals) : '—'; }
 
@@ -2438,40 +2608,140 @@ function generateReport(){
 
 // ── EXPORT REPORT TO EXCEL ──
 function exportReportExcel(){
-  if(!window._lastReportRows){ toast('Generá el reporte primero','err'); return; }
-  if(!window.XLSX){ toast('Librería no cargada','err'); return; }
-  const headers = ['Localidad','Provincia','Ramal','Mínima 24 h (°C)','Máxima 24 h (°C)','Lluvia 24 h (mm)','Lluvia 48 h (mm)','Ráfaga máx. 48 h (km/h)','Prob. precipitación máx. (%)','Evento principal','Estado'];
-  const data = [headers, ...window._lastReportRows.map(r=>[
-    r.sector.name,r.info.provincia,r.info.ramal,r.missing?'':r.min24,r.missing?'':r.max24,r.missing?'':r.rain24,r.missing?'':r.rain48,r.missing?'':r.gust48,r.missing?'':r.probability,r.event,r.state
-  ])];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = [{wch:24},{wch:12},{wch:14},{wch:16},{wch:16},{wch:16},{wch:16},{wch:22},{wch:24},{wch:38},{wch:14}];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Reporte diario');
-  XLSX.writeFile(wb, `Reporte_Meteorologico_Diario_UPSalta_${todayStr()}.xlsx`);
-  addLog('Reporte diario exportado a Excel');
-  toast('📊 Excel descargado','ok');
+  if(!window.XLSX){ toast('Librería de Excel no cargada','err'); return; }
+
+  // Se reconstruye siempre antes de exportar para evitar descargar datos o
+  // formatos de una generación anterior. Ambos botones Excel usan este único
+  // modelo definitivo de cuatro hojas.
+  generateReport();
+
+  const C={navy:'071A33',blue:'123A63',yellow:'F5C842',white:'FFFFFF',ink:'172033',muted:'667085',paleBlue:'EAF3FF',paleGray:'F2F4F7',green:'DDF7E8',amber:'FFF2CC',red:'FDE2E2',purple:'EDE2FF'};
+  const border={top:{style:'thin',color:{rgb:'D0D5DD'}},bottom:{style:'thin',color:{rgb:'D0D5DD'}},left:{style:'thin',color:{rgb:'D0D5DD'}},right:{style:'thin',color:{rgb:'D0D5DD'}}};
+  const style=(fill,fontColor=C.ink,bold=false,align='left',wrap=false)=>({fill:{patternType:'solid',fgColor:{rgb:fill}},font:{name:'Arial',sz:10,color:{rgb:fontColor},bold},alignment:{horizontal:align,vertical:'center',wrapText:wrap},border});
+  const titleStyle={...style(C.navy,C.yellow,true,'left'),font:{name:'Arial',sz:18,color:{rgb:C.yellow},bold:true}};
+  const sectionStyle=style(C.blue,C.white,true,'left');
+  const headerStyle=style(C.navy,C.white,true,'center',true);
+  const wb=XLSX.utils.book_new();
+  wb.Workbook={CalcPr:{calcMode:'auto'}};
+  const merge=(ws,ref)=>{ (ws['!merges']||(ws['!merges']=[])).push(XLSX.utils.decode_range(ref)); };
+  const put=(ws,addr,value,cellStyle,numFmt)=>{ const c=XLSX.utils.encode_cell(XLSX.utils.decode_cell(addr)); ws[c]=typeof value==='number'?{t:'n',v:value}:{t:'s',v:value??''}; if(cellStyle) ws[c].s=cellStyle; if(numFmt) ws[c].z=numFmt; };
+  const putFormula=(ws,addr,formula,value,cellStyle,numFmt)=>{ const c=XLSX.utils.encode_cell(XLSX.utils.decode_cell(addr)); ws[c]={t:'n',f:formula,v:Number(value)||0}; if(cellStyle) ws[c].s=cellStyle; if(numFmt) ws[c].z=numFmt; };
+  const paint=(ws,range,cellStyle)=>{ const r=XLSX.utils.decode_range(range); for(let R=r.s.r;R<=r.e.r;R++)for(let Cc=r.s.c;Cc<=r.e.c;Cc++){const a=XLSX.utils.encode_cell({r:R,c:Cc}); if(!ws[a]) ws[a]={t:'s',v:''}; ws[a].s=cellStyle;} };
+  const setRange=(ws,startRow,rows,styles=[])=>{ rows.forEach((row,i)=>row.forEach((v,j)=>put(ws,XLSX.utils.encode_cell({r:startRow-1+i,c:j}),v,styles[j]||styles[0]))); };
+  const finish=(ws,range,cols,rows=[])=>{ ws['!ref']=range; ws['!cols']=cols.map(w=>({wch:w})); ws['!rows']=rows; ws['!autofilter']=undefined; };
+  const rainStyle=mm=>mm===''||mm==null?style(C.paleGray,C.muted,false,'center'):mm<=14?style(C.white,C.ink,true,'center'):mm<=24?style('C6EFCE','006100',true,'center'):mm<=35?style('FFEB9C','9C6500',true,'center'):style('FFC7CE','9C0006',true,'center');
+  const stateStyle=s=>s==='Normal'?style(C.green,'11613D',true,'center'):s==='Precaución'?style(C.amber,'8A5B0A',true,'center'):s==='Alerta'?style(C.red,'8F1D18',true,'center'):s==='Crítico'?style(C.purple,'6B21A8',true,'center'):style(C.paleGray,C.muted,true,'center');
+  const rows=window._lastReportRows;
+  const meta=window._lastReportMeta;
+  const obs=document.getElementById('report-observations').value.trim();
+
+  // Hoja 1 · Reporte diario completo
+  const report=XLSX.utils.aoa_to_sheet([]);
+  merge(report,'A1:K2'); put(report,'A1','CLIMA ALERT · REPORTE METEOROLÓGICO DIARIO',titleStyle);
+  merge(report,'A3:K3'); put(report,'A3','Unidad de Producción Salta · Belgrano Cargas y Logística S.A.',sectionStyle);
+  merge(report,'A5:B5'); merge(report,'C5:D5'); merge(report,'E5:F5'); merge(report,'G5:H5'); merge(report,'I5:J5');
+  put(report,'A5','Fecha de emisión',style(C.paleGray,C.ink,true));put(report,'C5',meta.now,style(C.paleGray,C.ink));
+  put(report,'E5','Período analizado',style(C.paleGray,C.ink,true));put(report,'G5','Próximas 48 horas',style(C.paleGray,C.ink));
+  put(report,'I5','Sectores monitoreados',style(C.paleGray,C.ink,true));put(report,'K5',SECTORS.length,style(C.paleGray,C.ink,true,'center'));
+  const cards=[['ESTADO GENERAL',meta.general],['NORMAL',meta.normal],['PRECAUCIÓN',meta.caution],['ALERTA / CRÍTICO',meta.alerts],['SIN DATOS',meta.missing]];
+  const cardCols=[0,2,4,6,8];
+  cards.forEach((card,i)=>{const c=cardCols[i],a=XLSX.utils.encode_col(c),b=XLSX.utils.encode_col(i===4?10:c+1);merge(report,`${a}7:${b}7`);merge(report,`${a}8:${b}9`);put(report,`${a}7`,card[0],i===0?headerStyle:i===1?style('16794B',C.white,true,'center'):i===2?style('B7791F',C.white,true,'center'):i===3?style('B42318',C.white,true,'center'):style(C.muted,C.white,true,'center'));put(report,`${a}8`,card[1],i===1?style(C.green,'11613D',true,'center'):i===2?style(C.amber,'8A5B0A',true,'center'):i===3?style(C.red,'8F1D18',true,'center'):style(C.paleBlue,C.navy,true,'center'));});
+  merge(report,'A10:K10'); put(report,'A10',meta.worst&&meta.worst.severity>1?`Evento prioritario — ${meta.worst.sector.name} (${meta.worst.info.ramal}): ${meta.worst.event}. Revisar condiciones antes de disponer tareas en el sector.`:'Sin eventos meteorológicos relevantes · Mantener monitoreo preventivo y verificar alertas oficiales del SMN.',style('FFF7D6','7A4E00',true,'left',true));
+  const reportHeaders=['Localidad','Provincia','Ramal','Mínima 24 h (°C)','Máxima 24 h (°C)','Lluvia 24 h (mm)','Lluvia 48 h (mm)','Ráfaga máx. 48 h (km/h)','Prob. precip. máx. (%)','Evento principal','Estado'];
+  setRange(report,11,[reportHeaders],reportHeaders.map(()=>headerStyle));
+  rows.forEach((r,i)=>{const rr=12+i;const vals=[r.sector.name,r.info.provincia,r.info.ramal,r.missing?'':r.min24,r.missing?'':r.max24,r.missing?'':r.rain24,r.missing?'':r.rain48,r.missing?'':r.gust48,r.missing?'':r.probability,r.event,r.state];const sts=[style(C.white),style(C.white),style(C.white,C.ink,true),...Array(6).fill(style(C.paleBlue,C.blue,false,'center')),style(C.paleGray,C.ink,false,'left',true),stateStyle(r.state)];setRange(report,rr,[vals],sts);});
+  const obsRow=12+rows.length+1; merge(report,`A${obsRow}:K${obsRow}`);put(report,`A${obsRow}`,'OBSERVACIONES OPERATIVAS',sectionStyle);merge(report,`A${obsRow+1}:K${obsRow+3}`);put(report,`A${obsRow+1}`,obs||'Sin observaciones adicionales.',style(C.paleBlue,C.ink,false,'left',true));merge(report,`A${obsRow+5}:K${obsRow+5}`);put(report,`A${obsRow+5}`,'Fuente: Open-Meteo · Pronóstico modelado por coordenada. Verificar alertas oficiales del SMN. Comunidad privada: https://chat.whatsapp.com/GFKC9dXeKAfKVQAL9r8P26',style(C.white,C.muted,false,'left',true));
+  finish(report,`A1:K${obsRow+5}`,[24,12,13,15,15,15,15,20,21,36,14],[{hpt:27},{hpt:27},{hpt:20},null,null,null,{hpt:23},{hpt:28},{hpt:28},{hpt:34},{hpt:38}]);
+  XLSX.utils.book_append_sheet(wb,report,'Reporte diario');
+
+  // Hoja 2 · Umbrales operativos utilizados por el Dashboard
+  const thresholds=XLSX.utils.aoa_to_sheet([]);
+  merge(thresholds,'A1:I2');put(thresholds,'A1','UMBRALES OPERATIVOS · CLIMA ALERT',titleStyle);merge(thresholds,'A3:I3');put(thresholds,'A3','Parámetros vigentes utilizados para clasificar cada localidad.',sectionStyle);
+  const th=['Localidad','Provincia','Ramal','Latitud','Longitud','Calor (°C)','Frío (°C)','Lluvia 24 h (mm)','Viento (km/h)'];setRange(thresholds,5,[th],th.map(()=>headerStyle));
+  SECTORS.forEach((s,i)=>{const info=SECTOR_INFO[s.id]||{};const t=getThr(s.id);setRange(thresholds,6+i,[[s.name,info.provincia||'',info.ramal||'',s.lat,s.lon,t.hot,t.cold,t.rain,t.wind]],[style(C.white),style(C.white),style(C.white,C.ink,true),style(C.white,C.ink,false,'center'),style(C.white,C.ink,false,'center'),...Array(4).fill(style(C.paleBlue,C.blue,true,'center'))]);});
+  finish(thresholds,`A1:I${5+SECTORS.length}`,[25,12,13,13,13,13,13,18,18],[{hpt:27},{hpt:27},{hpt:20},null,{hpt:34}]);XLSX.utils.book_append_sheet(wb,thresholds,'Umbrales');
+
+  // Hoja 3 · Previsión diaria de precipitaciones por 7 días
+  const forecast=XLSX.utils.aoa_to_sheet([]);
+  merge(forecast,'A1:J2');put(forecast,'A1','PREVISIÓN DE PRECIPITACIONES · PRÓXIMOS 7 DÍAS',titleStyle);merge(forecast,'A3:J3');put(forecast,'A3','Milímetros diarios previstos por localidad y total acumulado automático.',sectionStyle);
+  put(forecast,'A5','Escala diaria',headerStyle);put(forecast,'B5','0 a 14 mm',rainStyle(10));put(forecast,'C5','15 a 24 mm',rainStyle(20));put(forecast,'D5','25 a 35 mm',rainStyle(30));put(forecast,'E5','Más de 35 mm',rainStyle(40));merge(forecast,'F5:J5');put(forecast,'F5','La misma escala se aplica al total previsto por localidad.',style('FFF7D6','7A4E00',false,'left',true));
+  const dateParts=Object.fromEntries(new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Salta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const isoToday=`${dateParts.year}-${dateParts.month}-${dateParts.day}`;
+  const dates=Array.from({length:7},(_,i)=>{const d=new Date(`${isoToday}T12:00:00-03:00`);d.setDate(d.getDate()+i);return d.toISOString().slice(0,10);});
+  const dateLabel=d=>{const [y,m,day]=d.split('-');return `${day}/${m}`;};
+  const fh=['Localidad','Ramal',...dates.map((d,i)=>`Día ${i+1} · ${dateLabel(d)}`),'TOTAL 7 DÍAS (mm)'];setRange(forecast,7,[fh],fh.map(()=>headerStyle));
+  const dailyTotals=Array(7).fill(0);let grandTotal=0;
+  SECTORS.forEach((s,i)=>{const cur=weatherData[s.id];const rain=dates.map((d,di)=>{const idx=cur?.daily?.time?.indexOf(d)??-1;const v=idx>=0?Number(cur.daily.rain[idx]):NaN;if(Number.isFinite(v)){dailyTotals[di]+=v;return Number(v.toFixed(1));}return '';});const total=rain.some(v=>v!=='')?Number(rain.reduce((a,v)=>a+(Number(v)||0),0).toFixed(1)):'';if(total!=='')grandTotal+=total;const info=SECTOR_INFO[s.id]||{};const row=9+i;const vals=[s.name,info.ramal||'',...rain];const sts=[style(C.white),style(C.paleBlue,C.blue,true,'center'),...rain.map(rainStyle)];setRange(forecast,row,[vals],sts);if(total==='')put(forecast,`J${row}`,'',rainStyle(''));else putFormula(forecast,`J${row}`,`SUM(C${row}:I${row})`,total,rainStyle(total),'0.0');});
+  const totalRow=9+SECTORS.length;
+  setRange(forecast,totalRow,[['TOTAL PREVISTO POR DÍA','']],Array(2).fill(style(C.blue,C.white,true,'center')));
+  merge(forecast,`A${totalRow}:B${totalRow}`);
+  dailyTotals.forEach((v,i)=>{const col=XLSX.utils.encode_col(2+i);putFormula(forecast,`${col}${totalRow}`,`SUM(${col}9:${col}${totalRow-1})`,Number(v.toFixed(1)),style(C.blue,C.white,true,'center'),'0.0');});
+  putFormula(forecast,`J${totalRow}`,`SUM(J9:J${totalRow-1})`,Number(grandTotal.toFixed(1)),style(C.blue,C.white,true,'center'),'0.0');
+  merge(forecast,`A${totalRow+2}:J${totalRow+2}`);put(forecast,`A${totalRow+2}`,'Criterio: 0 a 14 mm = blanco; 15 a 24 mm = verde; 25 a 35 mm = amarillo; más de 35 mm = rojo.',style('FFF7D6','7A4E00',false,'left',true));
+  finish(forecast,`A1:J${totalRow+2}`,[27,18,14,14,14,14,14,14,14,20],[{hpt:27},{hpt:27},{hpt:20},null,{hpt:34},null,{hpt:38}]);XLSX.utils.book_append_sheet(wb,forecast,'Precipitación 7 días');
+
+  // Hoja 4 · Guía y fuentes
+  const guide=XLSX.utils.aoa_to_sheet([]);merge(guide,'A1:C2');put(guide,'A1','GUÍA DE USO · REPORTE METEOROLÓGICO',titleStyle);setRange(guide,4,[['Paso','Sección','Indicaciones']],Array(3).fill(headerStyle));
+  const guideRows=[['1','Reporte diario','Resume condiciones, evento principal y estado de los 23 sectores.'],['2','Clasificación','Los estados responden a los umbrales vigentes por localidad.'],['3','Umbrales','La hoja documenta los parámetros usados por Clima Alert al generar el informe.'],['4','Observaciones','Incluye las novedades o medidas preventivas cargadas antes de exportar.'],['5','Precipitación 7 días','Muestra milímetros diarios, color por rango y total previsto por localidad.'],['6','Validación oficial','Confirmar decisiones operativas con las alertas oficiales del SMN.']];guideRows.forEach((r,i)=>setRange(guide,5+i,[r],[style(C.white,C.ink,true,'center'),style(C.paleBlue,C.blue,true),style(C.white,C.ink,false,'left',true)]));merge(guide,'A12:C12');put(guide,'A12','Comunidad privada de Clima Alert',style('16794B',C.white,true));merge(guide,'A13:C13');put(guide,'A13','https://chat.whatsapp.com/GFKC9dXeKAfKVQAL9r8P26',style(C.green,'11613D',true));merge(guide,'A15:C15');put(guide,'A15','Fuentes oficiales y de apoyo',sectionStyle);setRange(guide,16,[['SMN','Alertas oficiales','https://www.smn.gob.ar/alertas'],['Open-Meteo','Datos modelados y pronóstico','https://open-meteo.com/']],[style(C.white,C.ink,true),style(C.paleBlue,C.blue,true),style(C.white,C.ink)]);merge(guide,'A19:C19');put(guide,'A19','Modelo definitivo · 4 hojas · previsión completa de 7 días',style(C.navy,C.yellow,true,'center'));finish(guide,'A1:C19',[14,25,80],[{hpt:27},{hpt:27},null,{hpt:28},...Array(6).fill({hpt:36})]);XLSX.utils.book_append_sheet(wb,guide,'Guía');
+
+  XLSX.writeFile(wb,`Reporte_Meteorologico_Clima_Alert_UP_Salta_7_dias_${todayStr()}.xlsx`,{bookType:'xlsx',cellStyles:true,compression:true});
+  addLog('Reporte meteorológico completo exportado a Excel con previsión de 7 días');
+  toast('📊 Excel completo descargado correctamente','ok');
 }
 
 // ── SEND REPORT VIA WHATSAPP ──
 function sendReportWhatsApp(){
   if(!window._lastReportRows){ toast('Generá el reporte primero','err'); return; }
-  if(!contacts.length){ toast('No hay contactos cargados','err'); return; }
   const meta=window._lastReportMeta;
-  let msg=`🌦️ *REPORTE METEOROLÓGICO DIARIO — UP SALTA*\n🕐 ${meta.now}\n📅 Próximas 48 horas\n\n*Estado general: ${meta.general}*\n🟢 ${meta.normal} normales · 🟡 ${meta.caution} en precaución · 🔴 ${meta.alerts} en alerta/crítico · ⚪ ${meta.missing} sin datos\n\n`;
-  const relevant=window._lastReportRows.filter(r=>r.severity>=2&&!r.missing);
-  if(relevant.length){
-    relevant.forEach(r=>{ const icon=r.severity>=4?'🟣':r.severity>=3?'🔴':'🟡'; msg+=`${icon} *${r.sector.name}* (${r.info.ramal}) — ${r.event}. Lluvia 24/48 h: ${reportRound(r.rain24)}/${reportRound(r.rain48)} mm. Ráfagas: ${reportRound(r.gust48,0)} km/h.\n`; });
-  }else msg+='✅ Sin eventos relevantes previstos en los sectores monitoreados.\n';
+  let msg=`🌦️ *CLIMA ALERT — UP SALTA*\n🕐 ${meta.now} · Próximas 48 h\n*Estado general: ${meta.general}*\n\n`;
+
+  // WhatsApp se resume por ramal: una sola línea operativa por grupo,
+  // sin enumerar todas las localidades incluidas en el reporte completo.
+  const ramales = window._lastReportRows.reduce((groups,row)=>{
+    const ramal=row.info.ramal||'Sin ramal';
+    (groups[ramal]||(groups[ramal]=[])).push(row);
+    return groups;
+  },{});
+  const ramalOrder=['C','C / C12','C13','C14','C / C15','C15','C18'];
+  Object.keys(ramales).sort((a,b)=>{
+    const ai=ramalOrder.indexOf(a), bi=ramalOrder.indexOf(b);
+    return (ai<0?999:ai)-(bi<0?999:bi)||a.localeCompare(b);
+  }).forEach(ramal=>{
+    const rows=ramales[ramal];
+    const available=rows.filter(r=>!r.missing);
+    if(!available.length){ msg+=`⚪ *Ramal ${ramal}:* sin datos.\n`; return; }
+    const maxSeverity=Math.max(...available.map(r=>r.severity));
+    const affected=available.filter(r=>r.severity>=2).length;
+    const missing=rows.length-available.length;
+    const maxRain24=Math.max(...available.map(r=>Number(r.rain24)||0));
+    const maxRain48=Math.max(...available.map(r=>Number(r.rain48)||0));
+    const maxGust=Math.max(...available.map(r=>Number(r.gust48)||0));
+    const states={1:['✅','NORMAL'],2:['🟡','PRECAUCIÓN'],3:['🔴','ALERTA'],4:['🟣','CRÍTICO']};
+    const [icon,state]=states[maxSeverity]||states[1];
+    const affectedText=affected?` · ${affected} sector${affected===1?'':'es'} afectado${affected===1?'':'s'}`:' · sin novedades';
+    const missingText=missing?` · ${missing} sin datos`:'';
+    msg+=`${icon} *Ramal ${ramal}: ${state}*${affectedText} · Lluvia máx. ${reportRound(maxRain24)}/${reportRound(maxRain48)} mm · Ráfagas ${reportRound(maxGust,0)} km/h${missingText}.\n`;
+  });
   const obs=document.getElementById('report-observations').value.trim();
   if(obs) msg+=`\n📝 *Observaciones:* ${obs}\n`;
-  msg+='\n_Fuente: Open-Meteo · Pronóstico modelado. Verificar alertas oficiales del SMN._';
-  contacts.forEach(c=>{
-    const phone = c.phone.replace(/\D/g,'');
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,'_blank');
-  });
-  addLog(`Reporte enviado por WhatsApp a ${contacts.length} contacto(s)`);
-  toast(`📱 Reporte enviado a ${contacts.length} contacto(s)`,'ok');
+  msg+='\n_Verificar alertas oficiales del SMN._';
+
+  // WhatsApp no permite publicar automáticamente en una comunidad desde una URL.
+  // Copiamos el reporte y abrimos la comunidad privada para que el usuario lo pegue y comparta.
+  const helper=document.createElement('textarea');
+  helper.value=msg;
+  helper.setAttribute('readonly','');
+  helper.style.position='fixed';
+  helper.style.opacity='0';
+  document.body.appendChild(helper);
+  helper.select();
+  helper.setSelectionRange(0,helper.value.length);
+  const copied=document.execCommand('copy');
+  document.body.removeChild(helper);
+
+  window.open(COMMUNITY_URL,'_blank','noopener,noreferrer');
+  addLog('Reporte preparado para compartir en la Comunidad privada de Clima Alert');
+  toast(copied?'📋 Resumen por ramal copiado. Pegalo y compartilo en la Comunidad.':'Comunidad abierta. Copiá el resumen por ramal para compartirlo.','ok');
 }
 
 // ── ACTUALIZACIÓN DEL REPORTE MIENTRAS EL PANEL ESTÁ ABIERTO ──
@@ -2484,9 +2754,39 @@ function startReportAutoTimer(){
   }, 60 * 60 * 1000);
 }
 
+// CLIMA BOT — CONSULTAS ACTUALES, FUTURAS Y PASADAS
+function chatNormalize(value=''){return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9/\s-]/g,' ').replace(/\s+/g,' ').trim();}
+function chatEscape(value=''){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+function chatAddMessage(role,text,source=''){const box=document.getElementById('chat-messages');if(!box)return;const row=document.createElement('div');row.className=`chat-row ${role}`;const safe=chatEscape(text);row.innerHTML=role==='bot'?`<span class="chat-avatar" aria-hidden="true">C</span><div class="chat-bubble">${safe}${source?`<span class="chat-source">${chatEscape(source)}</span>`:''}</div>`:`<div class="chat-bubble">${safe}</div>`;box.appendChild(row);box.scrollTop=box.scrollHeight;}
+function chatSetTyping(show){document.getElementById('chat-typing-row')?.remove();if(!show)return;const box=document.getElementById('chat-messages');const row=document.createElement('div');row.id='chat-typing-row';row.className='chat-row bot';row.innerHTML='<span class="chat-avatar">C</span><div class="chat-bubble"><span class="chat-typing"><i></i><i></i><i></i></span></div>';box.appendChild(row);box.scrollTop=box.scrollHeight;}
+function toggleClimaChat(){document.getElementById('clima-chat-panel')?.classList.contains('open')?closeClimaChat():openClimaChat();}
+function openClimaChat(){const panel=document.getElementById('clima-chat-panel'),launcher=document.getElementById('clima-chat-launcher');if(!panel)return;panel.classList.add('open');panel.setAttribute('aria-hidden','false');launcher?.setAttribute('aria-expanded','true');if(!climaChatWelcomed){climaChatWelcomed=true;chatAddMessage('bot',climaChatAuthorized?'Hola, soy Clima Bot. Podés preguntarme por una localidad o ramal, ahora, durante los próximos 7 días o en una fecha pasada.':'Hola, soy Clima Bot. Para consultar información meteorológica necesitás ingresar con una cuenta aprobada.');}setTimeout(()=>document.getElementById('clima-chat-input')?.focus(),80);}
+function closeClimaChat(){const panel=document.getElementById('clima-chat-panel'),launcher=document.getElementById('clima-chat-launcher');panel?.classList.remove('open');panel?.setAttribute('aria-hidden','true');launcher?.setAttribute('aria-expanded','false');launcher?.focus();}
+function setClimaChatAccess(allowed,label=''){climaChatAuthorized=Boolean(allowed);const input=document.getElementById('clima-chat-input'),send=document.getElementById('clima-chat-send'),login=document.getElementById('clima-chat-login'),status=document.getElementById('chat-header-status');if(input){input.disabled=!allowed;input.placeholder=allowed?'Ej.: ¿Cómo estará Pichanal mañana?':'Acceso disponible para usuarios aprobados';}if(send)send.disabled=!allowed;if(login)login.hidden=Boolean(allowed);if(status)status.textContent=allowed?`Asistente privado${label?' · '+label:''}`:'Acceso privado pendiente de autorización';}
+async function signInClimaBot(){if(!window.firebase)return;try{const auth=firebase.app().auth(),provider=new firebase.auth.GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});await auth.signInWithPopup(provider);}catch(error){if(error?.code==='auth/popup-blocked'){await firebase.app().auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());}else if(error?.code!=='auth/popup-closed-by-user'){chatAddMessage('bot','No se pudo iniciar sesión. Verificá que este dominio esté autorizado en Firebase Authentication.','Acceso privado no iniciado');}}}
+function askSuggestion(text){openClimaChat();if(!climaChatAuthorized)return;const input=document.getElementById('clima-chat-input');input.value=text;submitClimaChat({preventDefault(){}});}
+async function submitClimaChat(event){event.preventDefault();const input=document.getElementById('clima-chat-input');const question=input?.value.trim();if(!question||!climaChatAuthorized)return;input.value='';chatAddMessage('user',question);chatSetTyping(true);try{const result=await answerClimaQuestion(question);chatSetTyping(false);chatAddMessage('bot',result.text,result.source);}catch(error){chatSetTyping(false);chatAddMessage('bot','No pude obtener esos datos en este momento. Probá nuevamente o indicá una localidad y una fecha más precisa.','Sin respuesta meteorológica disponible');}}
+function sectorAliases(sector){const aliases=[sector.name];if(sector.id==='s6')aliases.push('guemes','general guemes','gral guemes');if(sector.id==='s11')aliases.push('san antonio','san antonio de los cobres');if(sector.id==='s20')aliases.push('maury','ingeniero maury','ing maury');if(sector.id==='s23')aliases.push('savio','general savio','gral savio');if(sector.id==='s25')aliases.push('pizarro','general pizarro','gral pizarro');return aliases.map(chatNormalize);}
+function findChatScope(question){const q=chatNormalize(question);const sector=SECTORS.find(item=>sectorAliases(item).some(alias=>q.includes(alias)));if(sector)return {type:'sector',label:sector.name,sectors:[sector]};const match=q.match(/(?:\bramal\s*)?\b(c(?:13|14|15|18|12)?)\b/i);if(match){const ramal=match[1].toUpperCase();const sectors=SECTORS.filter(item=>String(SECTOR_INFO[item.id]?.ramal||'').toUpperCase().split('/').map(v=>v.trim()).includes(ramal));if(sectors.length)return {type:'ramal',label:`Ramal ${ramal}`,ramal,sectors};}return {type:'all',label:'UP Salta',sectors:SECTORS};}
+function localISODate(offsetDays=0){const base=new Date(Date.now()+offsetDays*86400000);return new Intl.DateTimeFormat('en-CA',{timeZone:ARGENTINA_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(base);}
+function parseChatDate(question){const q=chatNormalize(question);const today=localISODate();if(q.includes('pasado manana'))return {mode:'future',date:localISODate(2),label:'pasado mañana'};if(q.includes('manana'))return {mode:'future',date:localISODate(1),label:'mañana'};if(q.includes('ayer'))return {mode:'past',date:localISODate(-1),label:'ayer'};const relative=q.match(/hace\s+(\d{1,3})\s+dias?/);if(relative){const days=Math.min(3650,Number(relative[1]));return {mode:'past',date:localISODate(-days),label:`hace ${days} días`};}const slash=q.match(/\b(\d{1,2})[/-](\d{1,2})(?:[/-](\d{2,4}))?\b/);if(slash){const year=slash[3]?(slash[3].length===2?'20'+slash[3]:slash[3]):today.slice(0,4);const date=`${year}-${String(slash[2]).padStart(2,'0')}-${String(slash[1]).padStart(2,'0')}`;return {mode:date<today?'past':date===today?'current':'future',date,label:`el ${slash[1]}/${slash[2]}/${year}`};}const iso=q.match(/\b(20\d{2})-(\d{2})-(\d{2})\b/);if(iso){const date=iso[0];return {mode:date<today?'past':date===today?'current':'future',date,label:`el ${iso[3]}/${iso[2]}/${iso[1]}`};}if(q.includes('proxim')||q.includes('futur')||q.includes('pronost')||q.includes('semana'))return {mode:'future',date:null,label:'los próximos 7 días'};return {mode:'current',date:today,label:'ahora'};}
+function weatherLine(sector,data){const alerts=getAlerts(data,sector.id);return `${sector.name}: ${Number(data.temperature_2m).toFixed(1)} °C, lluvia ${Number(data.precipitation).toFixed(1)} mm, viento ${Number(data.wind_speed_10m).toFixed(0)} km/h, ráfagas ${Number(data.wind_gusts_10m).toFixed(0)} km/h${alerts.length?' · ALERTA: '+alerts.map(a=>a.label).join(', '):' · sin umbrales superados'}`;}
+async function ensureCurrentData(sectors){const missing=sectors.filter(sector=>!weatherData[sector.id]);if(missing.length)await Promise.all(missing.map(async sector=>{try{weatherData[sector.id]=await fetchSector(sector);}catch(_){}}));}
+async function answerCurrent(scope){await ensureCurrentData(scope.sectors);const rows=scope.sectors.map(sector=>({sector,data:weatherData[sector.id]})).filter(row=>row.data);if(!rows.length)throw new Error('Sin datos actuales');if(scope.type==='sector')return {text:`Condiciones actuales en ${weatherLine(rows[0].sector,rows[0].data)}.`,source:`Open-Meteo · actualizado ${argentinaDateTime()} h`};const hottest=rows.reduce((a,b)=>Number(a.data.temperature_2m)>Number(b.data.temperature_2m)?a:b);const gustiest=rows.reduce((a,b)=>Number(a.data.wind_gusts_10m)>Number(b.data.wind_gusts_10m)?a:b);const alerts=rows.filter(row=>getAlerts(row.data,row.sector.id).length);const affected=alerts.length?`Hay ${alerts.length} sector${alerts.length===1?'':'es'} con umbrales superados: ${alerts.map(row=>row.sector.name).join(', ')}.`:'No hay umbrales operativos superados en los sectores con datos.';return {text:`${scope.label} ahora: ${affected}\nMayor temperatura: ${hottest.sector.name}, ${Number(hottest.data.temperature_2m).toFixed(1)} °C. Mayor ráfaga: ${gustiest.sector.name}, ${Number(gustiest.data.wind_gusts_10m).toFixed(0)} km/h.`,source:`Open-Meteo · ${rows.length} localidades · ${argentinaDateTime()} h`};}
+function futureIndex(data,date){return data?.daily?.time?.indexOf(date)??-1;}
+async function answerFuture(scope,period){await ensureCurrentData(scope.sectors);const today=localISODate();const maxDate=localISODate(6);if(period.date&&period.date>maxDate)return {text:'El pronóstico disponible llega hasta 7 días. Indicame una fecha dentro de ese período.',source:'Alcance del pronóstico de Clima Alert'};const rows=[];for(const sector of scope.sectors){const data=weatherData[sector.id];if(!data?.daily?.time)continue;const indices=period.date?[futureIndex(data,period.date)]:data.daily.time.map((_,i)=>i).filter(i=>data.daily.time[i]>=today);for(const index of (Array.isArray(indices)?indices:[indices]))if(index>=0)rows.push({sector,date:data.daily.time[index],max:Number(data.daily.tempMax[index]),min:Number(data.daily.tempMin[index]),rain:Number(data.daily.rain[index]||0),prob:Number(data.daily.rainProbability[index]||0),gust:Number(data.daily.gustMax[index]||0)});}if(!rows.length)throw new Error('Sin pronóstico');if(scope.type==='sector'){const selected=period.date?rows:[rows.reduce((a,b)=>b.rain>a.rain?b:a),rows.reduce((a,b)=>b.gust>a.gust?b:a)];const unique=[...new Map(selected.map(row=>[row.date,row])).values()];return {text:unique.map(row=>`${scope.label} ${row.date}: ${row.min.toFixed(1)} a ${row.max.toFixed(1)} °C, lluvia ${row.rain.toFixed(1)} mm (${row.prob.toFixed(0)} %), ráfagas hasta ${row.gust.toFixed(0)} km/h.`).join('\n'),source:'Pronóstico Open-Meteo · no reemplaza alertas oficiales del SMN'};}const maxRain=rows.reduce((a,b)=>b.rain>a.rain?b:a),maxGust=rows.reduce((a,b)=>b.gust>a.gust?b:a),maxTemp=rows.reduce((a,b)=>b.max>a.max?b:a),dateText=period.date?period.label:'en los próximos 7 días';return {text:`Para ${scope.label} ${dateText}: mayor lluvia prevista en ${maxRain.sector.name}, ${maxRain.rain.toFixed(1)} mm; mayor ráfaga en ${maxGust.sector.name}, ${maxGust.gust.toFixed(0)} km/h; máxima más alta en ${maxTemp.sector.name}, ${maxTemp.max.toFixed(1)} °C.`,source:'Pronóstico Open-Meteo · verificar alertas oficiales del SMN'};}
+async function fetchPastDay(sector,date){const recent=date>=localISODate(-7);const params=new URLSearchParams({latitude:String(sector.lat),longitude:String(sector.lon),daily:'temperature_2m_max,temperature_2m_min,precipitation_sum,wind_gusts_10m_max',wind_speed_unit:'kmh',timezone:ARGENTINA_TZ});let url;if(recent){params.set('past_days','7');params.set('forecast_days','1');url=`https://api.open-meteo.com/v1/forecast?${params}`;}else{params.set('start_date',date);params.set('end_date',date);url=`https://archive-api.open-meteo.com/v1/archive?${params}`;}const response=await fetchWithTimeout(url,1);const data=await response.json();const index=data.daily?.time?.indexOf(date)??-1;if(index<0)throw new Error('Sin histórico');return {sector,max:Number(data.daily.temperature_2m_max?.[index]),min:Number(data.daily.temperature_2m_min?.[index]),rain:Number(data.daily.precipitation_sum?.[index]||0),gust:Number(data.daily.wind_gusts_10m_max?.[index]||0)};}
+async function answerPast(scope,period){const results=await Promise.all(scope.sectors.map(sector=>fetchPastDay(sector,period.date).catch(()=>null)));const rows=results.filter(Boolean);if(!rows.length)throw new Error('Sin histórico');if(scope.type==='sector'){const row=rows[0];return {text:`En ${scope.label}, ${period.label}: temperatura entre ${row.min.toFixed(1)} y ${row.max.toFixed(1)} °C, precipitación acumulada ${row.rain.toFixed(1)} mm y ráfaga máxima ${row.gust.toFixed(0)} km/h.`,source:'Archivo histórico Open-Meteo · datos de reanálisis/modelados'};}const maxRain=rows.reduce((a,b)=>b.rain>a.rain?b:a),maxGust=rows.reduce((a,b)=>b.gust>a.gust?b:a),maxTemp=rows.reduce((a,b)=>b.max>a.max?b:a),minTemp=rows.reduce((a,b)=>b.min<a.min?b:a);return {text:`En ${scope.label}, ${period.label}: mayor lluvia en ${maxRain.sector.name}, ${maxRain.rain.toFixed(1)} mm; mayor ráfaga en ${maxGust.sector.name}, ${maxGust.gust.toFixed(0)} km/h; máxima más alta ${maxTemp.max.toFixed(1)} °C en ${maxTemp.sector.name}; mínima más baja ${minTemp.min.toFixed(1)} °C en ${minTemp.sector.name}.`,source:`Archivo histórico Open-Meteo · ${rows.length} localidades`};}
+async function answerClimaQuestion(question){const scope=findChatScope(question),period=parseChatDate(question),q=chatNormalize(question);if(q.includes('ayuda')||q.includes('que podes'))return {text:'Podés preguntarme por temperatura, lluvia, viento, ráfagas y alertas de una localidad o ramal. Entiendo “ahora”, “mañana”, “próximos 7 días”, “ayer” y fechas como 02/08/2026.',source:'Clima Bot · asistente meteorológico privado'};if(period.mode==='past')return answerPast(scope,period);if(period.mode==='future')return answerFuture(scope,period);return answerCurrent(scope);}
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.getElementById('clima-chat-panel')?.classList.contains('open'))closeClimaChat();});
+
 </script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-installations-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
 <script>
 (function initContactsAccess(){
   const status=document.getElementById('contacts-access-status');
@@ -2539,7 +2839,256 @@ function startReportAutoTimer(){
   logoutBtn.addEventListener('click',()=>auth.signOut());
   auth.onAuthStateChanged(updateAccess);
 })();
+
+let stopBotStatus=null;
+let stopBotAlerts=null;
+let botAlertsCache=[];
+let climaPushAuthorized=false;
+let climaPushForegroundBound=false;
+const CLIMA_PUSH_DEVICE_KEY='clima-alert-push-device-id';
+const CLIMA_PUSH_VAPID_PUBLIC_KEY='BMAJFk1lc09VAhV7WgESER9KCarybSjAaYVG-OfntEclhsyZrWZcyoDXyzKXqcBmIw4PdYIYA7P4HNPtRIW9fio';
+
+function setPushUi(state,message){
+  const copy=document.getElementById('push-status-copy');
+  const activate=document.getElementById('push-toggle-btn');
+  const test=document.getElementById('push-test-btn');
+  const disable=document.getElementById('push-disable-btn');
+  if(copy){copy.textContent=message;copy.className=`push-status ${state==='active'?'active':state==='error'?'error':state==='warning'?'warning':''}`;}
+  if(activate){activate.disabled=!climaPushAuthorized||state==='loading';activate.hidden=state==='active';activate.textContent=state==='loading'?'Activando…':'Activar notificaciones';}
+  if(test)test.hidden=state!=='active';
+  if(disable)disable.hidden=state!=='active';
+}
+
+function pushSupportError(){
+  const isiPhone=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const standalone=window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true;
+  if(isiPhone&&!standalone)return 'En iPhone, primero agregá Clima Alert a la pantalla de inicio y abrila desde el nuevo ícono.';
+  if(!window.isSecureContext)return 'Las notificaciones requieren una conexión segura HTTPS.';
+  if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)||!window.firebase?.messaging)return 'Este navegador no admite notificaciones web.';
+  return '';
+}
+
+async function hashPushToken(token){
+  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(bytes)).map(value=>value.toString(16).padStart(2,'0')).join('').slice(0,40);
+}
+
+async function getPushRegistration(){
+  return navigator.serviceWorker.register('./firebase-messaging-sw.js');
+}
+
+async function getPushVapidKey(db){
+  const snapshot=await db.collection('configuracion').doc('climaAlertBot').get();
+  const key=String(snapshot.data()?.vapidPublicKey||CLIMA_PUSH_VAPID_PUBLIC_KEY).trim();
+  if(!key)throw new Error('VAPID_NOT_CONFIGURED');
+  return key;
+}
+
+function bindForegroundPush(messaging){
+  if(climaPushForegroundBound)return;
+  climaPushForegroundBound=true;
+  messaging.onMessage(payload=>{
+    const title=payload.data?.title||payload.notification?.title||'Clima Alert';
+    const body=payload.data?.body||payload.notification?.body||'Nueva alerta meteorológica.';
+    toast(`🔔 ${title}: ${body}`,'ok');
+    refreshBotCenter();
+  });
+}
+
+async function savePushDevice(user,token,fid){
+  const app=firebase.app(),db=app.firestore(),deviceId=await hashPushToken(fid||token);
+  const ref=db.collection('usuarios').doc(user.uid).collection('dispositivos').doc(deviceId);
+  const existing=await ref.get();
+  const data={uid:user.uid,fid,token,activo:true,plataforma:navigator.userAgent.slice(0,180),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
+  if(!existing.exists)data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+  await ref.set(data,{merge:true});
+  localStorage.setItem(CLIMA_PUSH_DEVICE_KEY,deviceId);
+}
+
+async function activateClimaPush(){
+  const supportError=pushSupportError();
+  if(supportError){setPushUi('error',supportError);return;}
+  const app=firebase.app(),user=app.auth().currentUser;
+  if(!user||!climaPushAuthorized){setPushUi('warning','Ingresá con una cuenta aprobada antes de activar las notificaciones.');return;}
+  setPushUi('loading','Esperando la autorización del teléfono…');
+  try{
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted'){
+      setPushUi('error',permission==='denied'?'Las notificaciones están bloqueadas en el navegador. Habilitalas desde la configuración del sitio.':'No se concedió permiso para enviar notificaciones.');
+      return;
+    }
+    const registration=await getPushRegistration();
+    const vapidKey=await getPushVapidKey(app.firestore());
+    const messaging=app.messaging();
+    const token=await messaging.getToken({vapidKey,serviceWorkerRegistration:registration});
+    if(!token)throw new Error('TOKEN_NOT_AVAILABLE');
+    const fid=await app.installations().getId();
+    await savePushDevice(user,token,fid);
+    bindForegroundPush(messaging);
+    setPushUi('active','Notificaciones activas en este dispositivo. Recibirás solo alertas nuevas o cambios importantes.');
+    toast('🔔 Notificaciones activadas','ok');
+  }catch(error){
+    const message=error?.message==='VAPID_NOT_CONFIGURED'?'Falta completar la clave de notificaciones del proyecto.':error?.code==='messaging/permission-blocked'?'Las notificaciones están bloqueadas en este navegador.':'No se pudo registrar este dispositivo. Probá nuevamente.';
+    setPushUi('error',message);
+  }
+}
+
+async function disableClimaPush(){
+  const app=firebase.app(),user=app.auth().currentUser,deviceId=localStorage.getItem(CLIMA_PUSH_DEVICE_KEY);
+  if(!user||!deviceId)return setPushUi('idle','Las notificaciones no están activas en este dispositivo.');
+  try{
+    await app.firestore().collection('usuarios').doc(user.uid).collection('dispositivos').doc(deviceId).delete();
+    await app.messaging().deleteToken().catch(()=>false);
+    localStorage.removeItem(CLIMA_PUSH_DEVICE_KEY);
+    setPushUi('idle','Notificaciones desactivadas en este dispositivo.');
+    toast('Notificaciones desactivadas','ok');
+  }catch(_){setPushUi('error','No se pudieron desactivar las notificaciones. Probá nuevamente.');}
+}
+
+async function testClimaPush(){
+  if(!climaPushAuthorized)return;
+  const button=document.getElementById('push-test-btn');
+  if(button){button.disabled=true;button.textContent='Enviando…';}
+  try{
+    const call=firebase.app().functions('southamerica-east1').httpsCallable('probarPushClimaAlert');
+    await call();
+    toast('🔔 Prueba enviada al teléfono','ok');
+  }catch(error){
+    const message=error?.code==='functions/resource-exhausted'?'Esperá un minuto antes de repetir la prueba.':'No se pudo enviar la prueba. Verificá que la función push esté desplegada.';
+    toast(message,'err');
+  }finally{if(button){button.disabled=false;button.textContent='Enviar prueba';}}
+}
+
+async function refreshPushState(user){
+  climaPushAuthorized=Boolean(user);
+  if(!user){setPushUi('idle','Ingresá con una cuenta aprobada para activar las notificaciones.');return;}
+  const supportError=pushSupportError();
+  if(supportError){setPushUi('error',supportError);return;}
+  if(Notification.permission==='denied'){setPushUi('error','Las notificaciones están bloqueadas en este navegador. Habilitalas desde la configuración del sitio.');return;}
+  const deviceId=localStorage.getItem(CLIMA_PUSH_DEVICE_KEY);
+  if(deviceId&&Notification.permission==='granted'){
+    const doc=await firebase.app().firestore().collection('usuarios').doc(user.uid).collection('dispositivos').doc(deviceId).get().catch(()=>null);
+    if(doc?.exists){bindForegroundPush(firebase.app().messaging());setPushUi('active','Notificaciones activas en este dispositivo. Recibirás solo alertas nuevas o cambios importantes.');return;}
+  }
+  setPushUi('idle','Activá las notificaciones para recibir alertas aun con la página cerrada.');
+}
+
+function botTimestamp(value){
+  const date=value?.toDate?value.toDate():(value?new Date(value):null);
+  if(!date||Number.isNaN(date.getTime()))return '—';
+  return new Intl.DateTimeFormat('es-AR',{timeZone:'America/Argentina/Salta',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(date)+' h';
+}
+
+function setBotAccessMessage(message){
+  const list=document.getElementById('bot-alert-list');
+  if(list)list.innerHTML=`<div class="bot-empty">${message}</div>`;
+}
+
+function renderBotAlerts(alerts){
+  botAlertsCache=alerts;
+  const list=document.getElementById('bot-alert-list');
+  const count=document.getElementById('bot-active-count');
+  if(count)count.textContent=String(alerts.length);
+  if(!list)return;
+  if(!alerts.length){
+    list.innerHTML='<div class="bot-empty"><div style="font-size:30px;margin-bottom:8px;">✓</div><b>Sin alertas automáticas activas</b><div style="font-size:12px;margin-top:5px;">El último control no detectó umbrales operativos superados.</div></div>';
+    return;
+  }
+  alerts.sort((a,b)=>(b.severity||0)-(a.severity||0));
+  list.innerHTML=alerts.map((alert,index)=>`
+    <article class="bot-alert ${Number(alert.severity)>=4?'critical':''}">
+      <div class="bot-alert-top"><div><div class="bot-alert-ramal">Ramal ${alert.ramal||'—'}</div><div class="bot-copy">Actualizada ${botTimestamp(alert.updatedAt)}</div></div><span class="bot-alert-level">${alert.state||'Alerta'}</span></div>
+      <div class="bot-alert-text">Sectores: <b>${(alert.sectors||[]).join(', ')||'—'}</b>\nLluvia máx.: ${Number(alert.maxRain24||0).toFixed(1)} mm/24 h · ${Number(alert.maxRain48||0).toFixed(1)} mm/48 h · Ráfagas: ${Number(alert.maxGust||0).toFixed(0)} km/h</div>
+      <button class="btn btn-primary btn-sm" type="button" onclick="shareBotAlert(${index})">📱 Copiar y abrir Comunidad</button>
+    </article>`).join('');
+}
+
+async function shareBotAlert(index){
+  const alert=botAlertsCache[index];
+  if(!alert)return;
+  const message=alert.message||`⚠️ CLIMA ALERT — RAMAL ${alert.ramal}`;
+  let copied=false;
+  try{await navigator.clipboard.writeText(message);copied=true;}catch(_){
+    const area=document.createElement('textarea');area.value=message;area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();copied=document.execCommand('copy');area.remove();
+  }
+  window.open(COMMUNITY_URL,'_blank','noopener,noreferrer');
+  toast(copied?'📋 Alerta copiada. Pegala en la Comunidad.':'Comunidad abierta. Copiá el aviso para compartirlo.','ok');
+}
+
+function stopBotListeners(){
+  if(stopBotStatus){stopBotStatus();stopBotStatus=null;}
+  if(stopBotAlerts){stopBotAlerts();stopBotAlerts=null;}
+}
+
+async function connectBotCenter(user){
+  stopBotListeners();
+  const dot=document.getElementById('bot-status-dot');
+  const title=document.getElementById('bot-status-title');
+  const detail=document.getElementById('bot-status-detail');
+  if(!user){
+    startThresholdSync(null);
+    climaPushAuthorized=false;
+    refreshPushState(null);
+    setClimaChatAccess(false);
+    if(title)title.textContent='Acceso privado';
+    if(detail)detail.textContent='Ingresá con Google desde Clima Bot para consultar las alertas.';
+    if(dot)dot.className='bot-status-dot';
+    setBotAccessMessage('🔒 Ingresá con Google desde Clima Bot usando una cuenta autorizada.');
+    return;
+  }
+  const app=firebase.apps.length?firebase.app():null;
+  if(!app)return;
+  const db=app.firestore();
+  try{
+    const userDoc=await db.collection('usuarios').doc(user.uid).get();
+    if(String(userDoc.data()?.estado||'').toLowerCase()!=='aprobado'){
+      startThresholdSync(null);
+      climaPushAuthorized=false;
+      refreshPushState(null);
+      setClimaChatAccess(false);
+      if(title)title.textContent='Usuario pendiente de autorización';
+      if(detail)detail.textContent='El centro del bot se habilita únicamente para cuentas aprobadas.';
+      setBotAccessMessage('⏳ Tu cuenta todavía no está autorizada para consultar las alertas automáticas.');
+      return;
+    }
+    climaPushAuthorized=true;
+    startThresholdSync(user);
+    refreshPushState(user);
+    setClimaChatAccess(true,user.displayName||user.email||'cuenta aprobada');
+    stopBotStatus=db.collection('estadoBot').doc('monitor').onSnapshot(snapshot=>{
+      const data=snapshot.exists?snapshot.data():{};
+      const state=data.status||'waiting';
+      if(dot)dot.className=`bot-status-dot ${state==='ok'?'ok':state==='warning'?'warning':state==='error'?'error':''}`;
+      if(title)title.textContent=state==='ok'?'Bot activo y operativo':state==='warning'?'Bot activo con datos incompletos':state==='error'?'Bot con error en el último control':state==='paused'?'Bot pausado':'Bot preparado · esperando primer control';
+      if(detail)detail.textContent=data.detail||'Monitoreo automático permanente.';
+      document.getElementById('bot-last-run').textContent=botTimestamp(data.lastRunAt||data.startedAt);
+      document.getElementById('bot-schedule').textContent=data.schedule||'Cada 30 min';
+      document.getElementById('bot-checked').textContent=Number.isFinite(Number(data.checkedSectors))?`${data.checkedSectors} / 23`:'—';
+    },()=>{
+      if(title)title.textContent='No se pudo leer el estado del bot';
+      if(detail)detail.textContent='Revisá las reglas de acceso de Firebase.';
+      if(dot)dot.className='bot-status-dot error';
+    });
+    stopBotAlerts=db.collection('alertasBot').where('active','==',true).onSnapshot(snapshot=>renderBotAlerts(snapshot.docs.map(doc=>({id:doc.id,...doc.data()}))),()=>setBotAccessMessage('No se pudieron leer las alertas. Revisá las reglas de Firebase.'));
+  }catch(_){
+    setClimaChatAccess(false);
+    if(title)title.textContent='Acceso no disponible';
+    if(detail)detail.textContent='No se pudo validar la autorización en Firebase.';
+    setBotAccessMessage('No fue posible validar el acceso al centro privado de alertas.');
+  }
+}
+
+function refreshBotCenter(){
+  const app=window.firebase&&firebase.apps.length?firebase.app():null;
+  if(app)connectBotCenter(app.auth().currentUser);
+}
+
+(function initPrivateBotCenter(){
+  if(!window.firebase||!firebase.firestore)return;
+  const app=firebase.apps.length?firebase.app():firebase.initializeApp({apiKey:'AIzaSyB_xWShz8Rc9qH9vDEJpi2veAoDs7ZdHIg',authDomain:'up-salta-vision.firebaseapp.com',projectId:'up-salta-vision',storageBucket:'up-salta-vision.firebasestorage.app',messagingSenderId:'1087987428046',appId:'1:1087987428046:web:ff122468cf8f1c9ae7be9f'});
+  app.auth().onAuthStateChanged(connectBotCenter);
+})();
 </script>
-<div style="position:fixed;bottom:14px;right:18px;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#f5c842;opacity:.8;pointer-events:none;z-index:9999;text-shadow:0 1px 4px rgba(0,0,0,.8);">By AJGodoy</div>
+<div style="position:fixed;bottom:14px;right:96px;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#f5c842;opacity:.8;pointer-events:none;z-index:9999;text-shadow:0 1px 4px rgba(0,0,0,.8);">By AJGodoy</div>
 </body>
 </html>
