@@ -2860,6 +2860,7 @@ let climaPushAuthorized=false;
 let climaPushForegroundBound=false;
 const CLIMA_PUSH_DEVICE_KEY='clima-alert-push-device-id';
 const CLIMA_PUSH_VAPID_PUBLIC_KEY='BMAJFk1lc09VAhV7WgESER9KCarybSjAaYVG-OfntEclhsyZrWZcyoDXyzKXqcBmIw4PdYIYA7P4HNPtRIW9fio';
+const CLIMA_PUSH_SW_VERSION='20260810-2';
 
 function setPushUi(state,message){
   const copy=document.getElementById('push-status-copy');
@@ -2887,7 +2888,29 @@ async function hashPushToken(token){
 }
 
 async function getPushRegistration(){
-  return navigator.serviceWorker.register('./firebase-messaging-sw.js');
+  // Resolve from the current application directory. GitHub Pages serves the
+  // test app from /Clima-Alert-TAC/ and VisionSite serves it from /clima/.
+  const appBaseUrl=new URL('./',document.baseURI);
+  const workerUrl=new URL(`firebase-messaging-sw.js?v=${CLIMA_PUSH_SW_VERSION}`,appBaseUrl);
+  const registration=await navigator.serviceWorker.register(workerUrl.href,{scope:appBaseUrl.pathname});
+
+  // Do not hand Firebase a registration until the worker is actually active.
+  // Some Android browsers otherwise make Firebase fall back to the default
+  // /firebase-messaging-sw.js path at the origin root.
+  const worker=registration.installing||registration.waiting||registration.active;
+  if(worker&&worker.state!=='activated'){
+    await new Promise((resolve,reject)=>{
+      const timeout=setTimeout(()=>reject(new Error('SERVICE_WORKER_TIMEOUT')),15000);
+      worker.addEventListener('statechange',()=>{
+        if(worker.state==='activated'){
+          clearTimeout(timeout);
+          resolve();
+        }
+      });
+    });
+  }
+  if(!registration.active)await navigator.serviceWorker.ready;
+  return registration;
 }
 
 async function getPushVapidKey(db){
@@ -2948,6 +2971,13 @@ async function activateClimaPush(){
     const registration=await getPushRegistration();
     const vapidKey=await getPushVapidKey(app.firestore());
     const messaging=app.messaging();
+    // The public option below is the supported Firebase API. Assigning the
+    // same values to the compat delegate prevents the pinned compat SDK from
+    // attempting its origin-root fallback on affected Android browsers.
+    if(messaging._delegate){
+      messaging._delegate.swRegistration=registration;
+      messaging._delegate.vapidKey=vapidKey;
+    }
     const token=await messaging.getToken({vapidKey,serviceWorkerRegistration:registration});
     if(!token)throw new Error('TOKEN_NOT_AVAILABLE');
     await savePushDevice(user,token);
