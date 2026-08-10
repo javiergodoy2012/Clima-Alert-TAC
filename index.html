@@ -2860,7 +2860,7 @@ let climaPushAuthorized=false;
 let climaPushForegroundBound=false;
 const CLIMA_PUSH_DEVICE_KEY='clima-alert-push-device-id';
 const CLIMA_PUSH_VAPID_PUBLIC_KEY='BMAJFk1lc09VAhV7WgESER9KCarybSjAaYVG-OfntEclhsyZrWZcyoDXyzKXqcBmIw4PdYIYA7P4HNPtRIW9fio';
-const CLIMA_PUSH_SW_VERSION='20260810-2';
+const CLIMA_PUSH_SW_VERSION='20260810-3';
 
 function setPushUi(state,message){
   const copy=document.getElementById('push-status-copy');
@@ -2894,23 +2894,17 @@ async function getPushRegistration(){
   const workerUrl=new URL(`firebase-messaging-sw.js?v=${CLIMA_PUSH_SW_VERSION}`,appBaseUrl);
   const registration=await navigator.serviceWorker.register(workerUrl.href,{scope:appBaseUrl.pathname});
 
-  // Do not hand Firebase a registration until the worker is actually active.
-  // Some Android browsers otherwise make Firebase fall back to the default
-  // /firebase-messaging-sw.js path at the origin root.
-  const worker=registration.installing||registration.waiting||registration.active;
-  if(worker&&worker.state!=='activated'){
-    await new Promise((resolve,reject)=>{
-      const timeout=setTimeout(()=>reject(new Error('SERVICE_WORKER_TIMEOUT')),15000);
-      worker.addEventListener('statechange',()=>{
-        if(worker.state==='activated'){
-          clearTimeout(timeout);
-          resolve();
-        }
-      });
-    });
-  }
-  if(!registration.active)await navigator.serviceWorker.ready;
-  return registration;
+  // An older active worker is valid for FCM while an update is waiting. Waiting
+  // for the newer worker here creates a deadlock: it cannot activate until the
+  // current page releases the older one. Always reuse the active registration
+  // and let the browser install the update normally in the background.
+  if(registration.active)return registration;
+  const readyRegistration=await Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('SERVICE_WORKER_TIMEOUT')),15000))
+  ]);
+  if(!readyRegistration?.active)throw new Error('SERVICE_WORKER_NOT_ACTIVE');
+  return readyRegistration;
 }
 
 async function getPushVapidKey(db){
@@ -2948,6 +2942,8 @@ async function savePushDevice(user,token){
 function pushActivationError(error){
   const code=String(error?.code||'');
   if(error?.message==='VAPID_NOT_CONFIGURED')return 'Falta completar la clave de notificaciones del proyecto.';
+  if(error?.message==='SERVICE_WORKER_TIMEOUT'||error?.message==='SERVICE_WORKER_NOT_ACTIVE')return 'El servicio de notificaciones no terminó de iniciar. Cerrá las demás pestañas de Clima Alert, recargá e intentá otra vez.';
+  if(error?.message==='TOKEN_NOT_AVAILABLE')return 'Firebase no entregó un identificador para este teléfono. Recargá la página e intentá nuevamente.';
   if(Notification.permission==='denied'||code==='messaging/permission-blocked')return 'Las notificaciones están bloqueadas en este navegador. Habilitalas desde la configuración del sitio.';
   if(code==='permission-denied'||code==='firestore/permission-denied')return 'Firebase rechazó el registro del teléfono. La cuenta debe figurar como aprobada.';
   if(code==='messaging/invalid-vapid-key')return 'La clave pública de notificaciones no es válida.';
@@ -2962,14 +2958,18 @@ async function activateClimaPush(){
   const app=firebase.app(),user=app.auth().currentUser;
   if(!user||!climaPushAuthorized){setPushUi('warning','Ingresá con una cuenta aprobada antes de activar las notificaciones.');return;}
   setPushUi('loading','Esperando la autorización del teléfono…');
+  let stage='permiso';
   try{
     const permission=await Notification.requestPermission();
     if(permission!=='granted'){
       setPushUi('error',permission==='denied'?'Las notificaciones están bloqueadas en el navegador. Habilitalas desde la configuración del sitio.':'No se concedió permiso para enviar notificaciones.');
       return;
     }
+    stage='servicio';
     const registration=await getPushRegistration();
+    stage='clave';
     const vapidKey=await getPushVapidKey(app.firestore());
+    stage='token';
     const messaging=app.messaging();
     // The public option below is the supported Firebase API. Assigning the
     // same values to the compat delegate prevents the pinned compat SDK from
@@ -2980,13 +2980,15 @@ async function activateClimaPush(){
     }
     const token=await messaging.getToken({vapidKey,serviceWorkerRegistration:registration});
     if(!token)throw new Error('TOKEN_NOT_AVAILABLE');
+    stage='guardado';
     await savePushDevice(user,token);
     bindForegroundPush(messaging);
     setPushUi('active','Notificaciones activas en este dispositivo. Recibirás solo alertas nuevas o cambios importantes.');
     toast('🔔 Notificaciones activadas','ok');
   }catch(error){
     console.error('No se pudo activar Clima Alert Push',error);
-    setPushUi('error',pushActivationError(error));
+    const detail=pushActivationError(error);
+    setPushUi('error',`${detail} Etapa: ${stage}.`);
   }
 }
 
