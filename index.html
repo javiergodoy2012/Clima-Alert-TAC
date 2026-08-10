@@ -31,6 +31,7 @@
   .vision-switch:focus-visible{outline:3px solid #ffc928;outline-offset:2px}
   @media(max-width:700px){.vision-switch{top:7px;left:7px;min-height:36px;padding:0 11px;font-size:10px}}
 *{margin:0;padding:0;box-sizing:border-box;}
+[hidden]{display:none!important;}
 :root{
   --side-image-margin:clamp(96px,8vw,150px);
   --bg:#0f1117;--bg2:#161b27;--surface:#1c2333;--surface2:#232d42;
@@ -2857,7 +2858,6 @@ let stopBotStatus=null;
 let stopBotAlerts=null;
 let botAlertsCache=[];
 let climaPushAuthorized=false;
-let climaPushForegroundBound=false;
 const CLIMA_PUSH_DEVICE_KEY='clima-alert-push-device-id';
 const CLIMA_PUSH_VAPID_PUBLIC_KEY='BMAJFk1lc09VAhV7WgESER9KCarybSjAaYVG-OfntEclhsyZrWZcyoDXyzKXqcBmIw4PdYIYA7P4HNPtRIW9fio';
 const CLIMA_PUSH_SW_VERSION='20260810-4';
@@ -2932,17 +2932,6 @@ async function getPushVapidKey(db){
   return key;
 }
 
-function bindForegroundPush(messaging){
-  if(climaPushForegroundBound)return;
-  climaPushForegroundBound=true;
-  messaging.onMessage(payload=>{
-    const title=payload.data?.title||payload.notification?.title||'Clima Alert';
-    const body=payload.data?.body||payload.notification?.body||'Nueva alerta meteorológica.';
-    toast(`🔔 ${title}: ${body}`,'ok');
-    refreshBotCenter();
-  });
-}
-
 async function savePushDevice(user,token){
   const app=firebase.app(),db=app.firestore(),deviceId=await hashPushToken(token);
   const ref=db.collection('usuarios').doc(user.uid).collection('dispositivos').doc(deviceId);
@@ -3001,7 +2990,6 @@ async function activateClimaPush(){
     if(!token)throw new Error('TOKEN_NOT_AVAILABLE');
     stage='guardado';
     await savePushDevice(user,token);
-    bindForegroundPush(messaging);
     setPushUi('active','Notificaciones activas en este dispositivo. Recibirás solo alertas nuevas o cambios importantes.');
     toast('🔔 Notificaciones activadas','ok');
   }catch(error){
@@ -3053,7 +3041,7 @@ async function refreshPushState(user){
   const deviceId=localStorage.getItem(CLIMA_PUSH_DEVICE_KEY);
   if(deviceId&&Notification.permission==='granted'){
     const doc=await firebase.app().firestore().collection('usuarios').doc(user.uid).collection('dispositivos').doc(deviceId).get().catch(()=>null);
-    if(doc?.exists){bindForegroundPush(firebase.app().messaging());setPushUi('active','Notificaciones activas en este dispositivo. Recibirás solo alertas nuevas o cambios importantes.');return;}
+    if(doc?.exists){setPushUi('active','Notificaciones activas en este dispositivo. Recibirás solo alertas nuevas o cambios importantes.');return;}
   }
   setPushUi('idle','Activá las notificaciones para recibir alertas aun con la página cerrada.');
 }
