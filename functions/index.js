@@ -195,25 +195,22 @@ function buildPushContent(alerts, test = false) {
 }
 
 async function sendPushToDeviceDocs(deviceDocs, content, data = {}) {
-  const devices = deviceDocs
-    .map(doc => ({doc, token:doc.data().token, fid:doc.data().fid}))
-    .filter(device => (typeof device.fid === "string" && device.fid.length > 10) || (typeof device.token === "string" && device.token.length > 20))
-    .slice(0, 500);
+  const uniqueTokens = new Map();
+  for (const doc of deviceDocs) {
+    const token = doc.data().token;
+    if (typeof token === "string" && token.length > 20 && !uniqueTokens.has(token)) uniqueTokens.set(token, {doc, token});
+  }
+  const devices = [...uniqueTokens.values()].slice(0, 500);
   if (!devices.length) return {successCount:0, failureCount:0, removedCount:0};
-  const fidDevices = devices.filter(device => typeof device.fid === "string" && device.fid.length > 10);
-  const tokenDevices = devices.filter(device => !(typeof device.fid === "string" && device.fid.length > 10));
   const message = {
+    tokens:devices.map(device => device.token),
     data:{type:"clima-alert", url:"./", ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))},
     webpush:{headers:{Urgency:"high"}}
   };
-  if (fidDevices.length) message.fids = fidDevices.map(device => device.fid);
-  if (tokenDevices.length) message.tokens = tokenDevices.map(device => device.token);
-  // Firebase devuelve primero las respuestas de tokens y luego las de FIDs.
-  const orderedDevices = [...tokenDevices, ...fidDevices];
   const response = await getMessaging().sendEachForMulticast(message);
   const invalidDocs = [];
   response.responses.forEach((item, index) => {
-    if (!item.success && PUSH_INVALID_TOKEN_CODES.has(item.error?.code)) invalidDocs.push(orderedDevices[index].doc.ref);
+    if (!item.success && PUSH_INVALID_TOKEN_CODES.has(item.error?.code)) invalidDocs.push(devices[index].doc.ref);
   });
   if (invalidDocs.length) {
     const batch = db.batch();
@@ -293,6 +290,8 @@ exports.probarPushClimaAlert = onCall({timeoutSeconds:30, memory:"256MiB", maxIn
   if (!user.exists || String(user.data().estado || "").toLowerCase() !== "aprobado") {
     throw new HttpsError("permission-denied", "La cuenta todavía no está aprobada.");
   }
+  const devices = await db.collection("usuarios").doc(uid).collection("dispositivos").where("activo", "==", true).limit(20).get();
+  if (devices.empty) throw new HttpsError("failed-precondition", "Primero activá las notificaciones en este dispositivo.");
   const stateRef = PUSH_TEST_STATE.doc(uid);
   await db.runTransaction(async transaction => {
     const state = await transaction.get(stateRef);
@@ -300,8 +299,6 @@ exports.probarPushClimaAlert = onCall({timeoutSeconds:30, memory:"256MiB", maxIn
     if (Date.now() - last < 60000) throw new HttpsError("resource-exhausted", "Esperá un minuto antes de repetir la prueba.");
     transaction.set(stateRef, {lastTestAt:Timestamp.now()}, {merge:true});
   });
-  const devices = await db.collection("usuarios").doc(uid).collection("dispositivos").where("activo", "==", true).limit(20).get();
-  if (devices.empty) throw new HttpsError("failed-precondition", "Primero activá las notificaciones en este dispositivo.");
   const content = buildPushContent([], true);
   const result = await sendPushToDeviceDocs(devices.docs, content, {title:content.title, body:content.body, test:"true"});
   if (!result.successCount) throw new HttpsError("unavailable", "No se pudo entregar la notificación de prueba.");

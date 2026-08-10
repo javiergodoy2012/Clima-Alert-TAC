@@ -14,7 +14,7 @@ service cloud.firestore {
     function isApproved() {
       return signedIn()
         && exists(/databases/$(database)/documents/usuarios/$(request.auth.uid))
-        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.estado == "aprobado";
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.estado in ["aprobado", "Aprobado", "APROBADO"];
     }
 
     function isThresholdAdmin() {
@@ -34,13 +34,11 @@ service cloud.firestore {
         allow create, update: if isOwner(userId)
           && isApproved()
           && request.resource.data.uid == request.auth.uid
-          && request.resource.data.fid is string
-          && request.resource.data.fid.size() > 10
           && request.resource.data.token is string
           && request.resource.data.token.size() > 20
           && request.resource.data.activo == true
           && request.resource.data.keys().hasOnly([
-            "uid", "fid", "token", "activo", "plataforma", "createdAt", "updatedAt"
+            "uid", "token", "activo", "plataforma", "createdAt", "updatedAt"
           ]);
         allow delete: if isOwner(userId) && isApproved();
       }

@@ -2062,11 +2062,25 @@ function clearLog(){
 // ══════════════════════════════════════════════
 function toast(msg, type='ok'){
   const icons = {ok:'✅',warn:'⚠️',err:'❌'};
+  const container = document.getElementById('toast');
+  if(!container)return;
+  const duplicate = [...container.querySelectorAll('.toast-item')].find(item=>item.dataset.message===String(msg)&&item.dataset.type===type);
+  if(duplicate){
+    clearTimeout(duplicate._removeTimer);
+    duplicate._removeTimer=setTimeout(()=>duplicate.remove(),3500);
+    return;
+  }
   const t = document.createElement('div');
   t.className = `toast-item ${type}`;
-  t.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
-  document.getElementById('toast').appendChild(t);
-  setTimeout(()=> t.remove(), 3500);
+  t.dataset.message=String(msg);
+  t.dataset.type=type;
+  const icon=document.createElement('span');
+  const copy=document.createElement('span');
+  icon.textContent=icons[type]||icons.ok;
+  copy.textContent=String(msg);
+  t.append(icon,copy);
+  container.appendChild(t);
+  t._removeTimer=setTimeout(()=>t.remove(),3500);
 }
 
 // ══════════════════════════════════════════════
@@ -2784,7 +2798,6 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.ge
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-installations-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
 <script>
@@ -2895,14 +2908,29 @@ function bindForegroundPush(messaging){
   });
 }
 
-async function savePushDevice(user,token,fid){
-  const app=firebase.app(),db=app.firestore(),deviceId=await hashPushToken(fid||token);
+async function savePushDevice(user,token){
+  const app=firebase.app(),db=app.firestore(),deviceId=await hashPushToken(token);
   const ref=db.collection('usuarios').doc(user.uid).collection('dispositivos').doc(deviceId);
   const existing=await ref.get();
-  const data={uid:user.uid,fid,token,activo:true,plataforma:navigator.userAgent.slice(0,180),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};
-  if(!existing.exists)data.createdAt=firebase.firestore.FieldValue.serverTimestamp();
-  await ref.set(data,{merge:true});
+  const timestamp=firebase.firestore.FieldValue.serverTimestamp();
+  const data={uid:user.uid,token,activo:true,plataforma:navigator.userAgent.slice(0,180),createdAt:existing.data()?.createdAt||timestamp,updatedAt:timestamp};
+  await ref.set(data);
+  const previousId=localStorage.getItem(CLIMA_PUSH_DEVICE_KEY);
+  if(previousId&&previousId!==deviceId){
+    await db.collection('usuarios').doc(user.uid).collection('dispositivos').doc(previousId).delete().catch(()=>false);
+  }
   localStorage.setItem(CLIMA_PUSH_DEVICE_KEY,deviceId);
+}
+
+function pushActivationError(error){
+  const code=String(error?.code||'');
+  if(error?.message==='VAPID_NOT_CONFIGURED')return 'Falta completar la clave de notificaciones del proyecto.';
+  if(Notification.permission==='denied'||code==='messaging/permission-blocked')return 'Las notificaciones están bloqueadas en este navegador. Habilitalas desde la configuración del sitio.';
+  if(code==='permission-denied'||code==='firestore/permission-denied')return 'Firebase rechazó el registro del teléfono. La cuenta debe figurar como aprobada.';
+  if(code==='messaging/invalid-vapid-key')return 'La clave pública de notificaciones no es válida.';
+  if(code==='messaging/failed-service-worker-registration')return 'No se pudo iniciar el servicio de notificaciones. Cerrá las pestañas anteriores y recargá la página.';
+  if(code==='messaging/token-subscribe-failed'||code==='messaging/token-update-failed')return 'Firebase no pudo vincular este navegador. Recargá la página e intentá nuevamente.';
+  return `No se pudo registrar este dispositivo${code?' ('+code.replace(/^messaging\//,'')+')':''}.`;
 }
 
 async function activateClimaPush(){
@@ -2922,14 +2950,13 @@ async function activateClimaPush(){
     const messaging=app.messaging();
     const token=await messaging.getToken({vapidKey,serviceWorkerRegistration:registration});
     if(!token)throw new Error('TOKEN_NOT_AVAILABLE');
-    const fid=await app.installations().getId();
-    await savePushDevice(user,token,fid);
+    await savePushDevice(user,token);
     bindForegroundPush(messaging);
     setPushUi('active','Notificaciones activas en este dispositivo. Recibirás solo alertas nuevas o cambios importantes.');
     toast('🔔 Notificaciones activadas','ok');
   }catch(error){
-    const message=error?.message==='VAPID_NOT_CONFIGURED'?'Falta completar la clave de notificaciones del proyecto.':error?.code==='messaging/permission-blocked'?'Las notificaciones están bloqueadas en este navegador.':'No se pudo registrar este dispositivo. Probá nuevamente.';
-    setPushUi('error',message);
+    console.error('No se pudo activar Clima Alert Push',error);
+    setPushUi('error',pushActivationError(error));
   }
 }
 
@@ -2954,7 +2981,14 @@ async function testClimaPush(){
     await call();
     toast('🔔 Prueba enviada al teléfono','ok');
   }catch(error){
-    const message=error?.code==='functions/resource-exhausted'?'Esperá un minuto antes de repetir la prueba.':'No se pudo enviar la prueba. Verificá que la función push esté desplegada.';
+    const messages={
+      'functions/resource-exhausted':'Esperá un minuto antes de repetir la prueba.',
+      'functions/failed-precondition':'Este teléfono todavía no está registrado. Activá primero las notificaciones.',
+      'functions/permission-denied':'La cuenta todavía no está aprobada para recibir notificaciones.',
+      'functions/unauthenticated':'Volvé a iniciar sesión antes de enviar la prueba.',
+      'functions/unavailable':'Firebase no pudo entregar la prueba a este teléfono. Volvé a activar las notificaciones.'
+    };
+    const message=messages[error?.code]||error?.message||'No se pudo enviar la prueba.';
     toast(message,'err');
   }finally{if(button){button.disabled=false;button.textContent='Enviar prueba';}}
 }
