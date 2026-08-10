@@ -2860,7 +2860,7 @@ let climaPushAuthorized=false;
 let climaPushForegroundBound=false;
 const CLIMA_PUSH_DEVICE_KEY='clima-alert-push-device-id';
 const CLIMA_PUSH_VAPID_PUBLIC_KEY='BMAJFk1lc09VAhV7WgESER9KCarybSjAaYVG-OfntEclhsyZrWZcyoDXyzKXqcBmIw4PdYIYA7P4HNPtRIW9fio';
-const CLIMA_PUSH_SW_VERSION='20260810-3';
+const CLIMA_PUSH_SW_VERSION='20260810-4';
 
 function setPushUi(state,message){
   const copy=document.getElementById('push-status-copy');
@@ -2892,19 +2892,37 @@ async function getPushRegistration(){
   // test app from /Clima-Alert-TAC/ and VisionSite serves it from /clima/.
   const appBaseUrl=new URL('./',document.baseURI);
   const workerUrl=new URL(`firebase-messaging-sw.js?v=${CLIMA_PUSH_SW_VERSION}`,appBaseUrl);
-  const registration=await navigator.serviceWorker.register(workerUrl.href,{scope:appBaseUrl.pathname});
+  let registration;
+  try{
+    registration=await navigator.serviceWorker.register(workerUrl.href,{
+      scope:appBaseUrl.pathname,
+      updateViaCache:'none'
+    });
+  }catch(error){
+    const detail=String(error?.message||error?.name||'registro rechazado').replace(/\s+/g,' ').slice(0,180);
+    throw new Error(`SERVICE_WORKER_REGISTER: ${detail}`);
+  }
 
-  // An older active worker is valid for FCM while an update is waiting. Waiting
-  // for the newer worker here creates a deadlock: it cannot activate until the
-  // current page releases the older one. Always reuse the active registration
-  // and let the browser install the update normally in the background.
+  await registration.update().catch(()=>false);
+  if(registration.waiting)registration.waiting.postMessage({type:'SKIP_WAITING'});
   if(registration.active)return registration;
-  const readyRegistration=await Promise.race([
-    navigator.serviceWorker.ready,
-    new Promise((_,reject)=>setTimeout(()=>reject(new Error('SERVICE_WORKER_TIMEOUT')),15000))
-  ]);
-  if(!readyRegistration?.active)throw new Error('SERVICE_WORKER_NOT_ACTIVE');
-  return readyRegistration;
+
+  const candidate=registration.installing||registration.waiting;
+  if(candidate){
+    await Promise.race([
+      new Promise((resolve,reject)=>{
+        const check=()=>{
+          if(candidate.state==='activated')resolve();
+          else if(candidate.state==='redundant')reject(new Error('SERVICE_WORKER_REDUNDANT'));
+        };
+        candidate.addEventListener('statechange',check);
+        check();
+      }),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('SERVICE_WORKER_TIMEOUT')),15000))
+    ]);
+  }
+  if(!registration.active)throw new Error('SERVICE_WORKER_NOT_ACTIVE');
+  return registration;
 }
 
 async function getPushVapidKey(db){
@@ -2941,8 +2959,9 @@ async function savePushDevice(user,token){
 
 function pushActivationError(error){
   const code=String(error?.code||'');
+  if(String(error?.message||'').startsWith('SERVICE_WORKER_REGISTER:'))return `El navegador rechazó el servicio: ${String(error.message).replace(/^SERVICE_WORKER_REGISTER:\s*/,'')}`;
   if(error?.message==='VAPID_NOT_CONFIGURED')return 'Falta completar la clave de notificaciones del proyecto.';
-  if(error?.message==='SERVICE_WORKER_TIMEOUT'||error?.message==='SERVICE_WORKER_NOT_ACTIVE')return 'El servicio de notificaciones no terminó de iniciar. Cerrá las demás pestañas de Clima Alert, recargá e intentá otra vez.';
+  if(error?.message==='SERVICE_WORKER_TIMEOUT'||error?.message==='SERVICE_WORKER_NOT_ACTIVE'||error?.message==='SERVICE_WORKER_REDUNDANT')return 'El servicio de notificaciones no terminó de iniciar. Cerrá las demás pestañas de Clima Alert, recargá e intentá otra vez.';
   if(error?.message==='TOKEN_NOT_AVAILABLE')return 'Firebase no entregó un identificador para este teléfono. Recargá la página e intentá nuevamente.';
   if(Notification.permission==='denied'||code==='messaging/permission-blocked')return 'Las notificaciones están bloqueadas en este navegador. Habilitalas desde la configuración del sitio.';
   if(code==='permission-denied'||code==='firestore/permission-denied')return 'Firebase rechazó el registro del teléfono. La cuenta debe figurar como aprobada.';

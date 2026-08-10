@@ -1,38 +1,52 @@
-/* global firebase */
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js');
+const CLIMA_ALERT_CACHE_VERSION='20260810-4';
 
-firebase.initializeApp({
-  apiKey:'AIzaSyB_xWShz8Rc9qH9vDEJpi2veAoDs7ZdHIg',
-  authDomain:'up-salta-vision.firebaseapp.com',
-  projectId:'up-salta-vision',
-  storageBucket:'up-salta-vision.firebasestorage.app',
-  messagingSenderId:'1087987428046',
-  appId:'1:1087987428046:web:ff122468cf8f1c9ae7be9f'
+self.addEventListener('install',event=>{
+  event.waitUntil(self.skipWaiting());
 });
 
-const messaging=firebase.messaging();
+self.addEventListener('activate',event=>{
+  event.waitUntil(self.clients.claim());
+});
 
-messaging.onBackgroundMessage(payload=>{
-  const title=payload.data?.title||'Clima Alert';
+self.addEventListener('message',event=>{
+  if(event.data?.type==='SKIP_WAITING')self.skipWaiting();
+});
+
+function pushData(event){
+  if(!event.data)return {};
+  try{return event.data.json()||{};}
+  catch(_){
+    try{return {data:{body:event.data.text()}};}
+    catch(__){return {};}
+  }
+}
+
+self.addEventListener('push',event=>{
+  const payload=pushData(event);
+  const data=payload.data||{};
+  const notification=payload.notification||{};
+  const title=data.title||notification.title||'Clima Alert';
   const options={
-    body:payload.data?.body||'Nueva alerta meteorológica en UP Salta.',
-    icon:'./logo-clima-alert-tac.webp',
-    badge:'./favicon.png',
-    tag:'clima-alert-operativa',
+    body:data.body||notification.body||'Nueva alerta meteorológica en UP Salta.',
+    icon:data.icon||notification.icon||'./logo-clima-alert-tac.webp',
+    badge:data.badge||'./favicon.png',
+    tag:data.tag||'clima-alert-operativa',
     renotify:true,
-    data:{url:payload.data?.url||'./'}
+    data:{url:data.url||notification.click_action||'./',version:CLIMA_ALERT_CACHE_VERSION}
   };
-  return self.registration.showNotification(title,options);
+  event.waitUntil(self.registration.showNotification(title,options));
 });
 
 self.addEventListener('notificationclick',event=>{
   event.notification.close();
-  const target=new URL(event.notification.data?.url||'./',self.location.href).href;
-  event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(windows=>{
+  const target=new URL(event.notification.data?.url||'./',self.registration.scope).href;
+  event.waitUntil(self.clients.matchAll({type:'window',includeUncontrolled:true}).then(windows=>{
     for(const client of windows){
-      if(client.url.startsWith(self.registration.scope)&&'focus' in client)return client.focus();
+      if(client.url.startsWith(self.registration.scope)&&'focus' in client){
+        if('navigate' in client)client.navigate(target).catch(()=>false);
+        return client.focus();
+      }
     }
-    return clients.openWindow?clients.openWindow(target):undefined;
+    return self.clients.openWindow?self.clients.openWindow(target):undefined;
   }));
 });
