@@ -2800,7 +2800,6 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&document.ge
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-messaging-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-functions-compat.js"></script>
 <script>
 (function initContactsAccess(){
   const status=document.getElementById('contacts-access-status');
@@ -3016,8 +3015,19 @@ async function testClimaPush(){
   const button=document.getElementById('push-test-btn');
   if(button){button.disabled=true;button.textContent='Enviando…';}
   try{
-    const call=firebase.app().functions('southamerica-east1').httpsCallable('probarPushClimaAlert');
-    await call();
+    const user=firebase.app().auth().currentUser;
+    if(!user)throw Object.assign(new Error('Volvé a iniciar sesión antes de enviar la prueba.'),{code:'functions/unauthenticated'});
+    const idToken=await user.getIdToken();
+    const response=await fetch('https://southamerica-east1-up-salta-vision.cloudfunctions.net/probarPushClimaAlert',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${idToken}`},
+      body:JSON.stringify({data:{}})
+    });
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok||payload.error){
+      const status=String(payload.error?.status||'internal').toLowerCase().replace(/_/g,'-');
+      throw Object.assign(new Error(payload.error?.message||'No se pudo enviar la prueba.'),{code:`functions/${status}`});
+    }
     toast('🔔 Prueba enviada al teléfono','ok');
   }catch(error){
     const messages={
