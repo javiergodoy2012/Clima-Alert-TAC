@@ -2235,6 +2235,53 @@ function getAudioCtx(){
   return alarmCtx;
 }
 
+let pushSirenActiveUntil = 0;
+
+async function unlockClimaAudio(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx.state === 'suspended') await ctx.resume();
+  }catch(error){ console.warn('No se pudo habilitar el audio:',error); }
+}
+
+function playFireSiren(){
+  try{
+    const ctx = getAudioCtx();
+    if(ctx.state === 'suspended'){
+      ctx.resume().then(()=>playFireSiren()).catch(()=>false);
+      return;
+    }
+    const now = ctx.currentTime;
+    if(now < pushSirenActiveUntil) return;
+    const duration = 5.6;
+    pushSirenActiveUntil = now + duration;
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.001,now);
+    master.gain.exponentialRampToValueAtTime(0.14,now+0.08);
+    master.gain.setValueAtTime(0.14,now+duration-0.25);
+    master.gain.exponentialRampToValueAtTime(0.001,now+duration);
+    master.connect(ctx.destination);
+    [-8,8].forEach(detune=>{
+      const oscillator = ctx.createOscillator();
+      oscillator.type = 'triangle';
+      oscillator.detune.setValueAtTime(detune,now);
+      oscillator.frequency.setValueAtTime(560,now);
+      for(let time=0;time<duration;time+=0.7){
+        oscillator.frequency.linearRampToValueAtTime(980,now+Math.min(time+0.35,duration));
+        oscillator.frequency.linearRampToValueAtTime(560,now+Math.min(time+0.7,duration));
+      }
+      oscillator.connect(master);
+      oscillator.start(now);
+      oscillator.stop(now+duration);
+    });
+  }catch(error){ console.warn('No se pudo reproducir la sirena:',error); }
+}
+
+document.addEventListener('pointerdown',unlockClimaAudio,{once:true,capture:true});
+navigator.serviceWorker?.addEventListener('message',event=>{
+  if(event.data?.type==='CLIMA_ALERT_PUSH'&&document.visibilityState==='visible')playFireSiren();
+});
+
 function playDip(){
   try{
     const ctx = getAudioCtx();
@@ -2255,10 +2302,10 @@ function playDip(){
 }
 
 function playAlarmSound(){
-  playDip();
+  playFireSiren();
 }
 
-function testAlarm(){ playAlarmSound(); toast('🔊 Probando sonido dip','ok'); }
+function testAlarm(){ playAlarmSound(); toast('🚨 Probando sirena de alerta','ok'); }
 
 function triggerAlarm(){
   if(!alarmEnabled || alarmSounding) return;
@@ -2859,7 +2906,7 @@ let botAlertsCache=[];
 let climaPushAuthorized=false;
 const CLIMA_PUSH_DEVICE_KEY='clima-alert-push-device-id';
 const CLIMA_PUSH_VAPID_PUBLIC_KEY='BMAJFk1lc09VAhV7WgESER9KCarybSjAaYVG-OfntEclhsyZrWZcyoDXyzKXqcBmIw4PdYIYA7P4HNPtRIW9fio';
-const CLIMA_PUSH_SW_VERSION='20260810-4';
+const CLIMA_PUSH_SW_VERSION='20260813-5';
 
 function setPushUi(state,message){
   const copy=document.getElementById('push-status-copy');

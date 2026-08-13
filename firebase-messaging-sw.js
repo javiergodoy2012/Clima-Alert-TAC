@@ -1,4 +1,4 @@
-const CLIMA_ALERT_CACHE_VERSION='20260810-4';
+const CLIMA_ALERT_CACHE_VERSION='20260813-5';
 
 self.addEventListener('install',event=>{
   event.waitUntil(self.skipWaiting());
@@ -32,9 +32,15 @@ self.addEventListener('push',event=>{
     badge:data.badge||'./favicon.png',
     tag:data.tag||'clima-alert-operativa',
     renotify:true,
+    vibrate:[300,120,300,120,800,180,800],
     data:{url:data.url||notification.click_action||'./',version:CLIMA_ALERT_CACHE_VERSION}
   };
-  event.waitUntil(self.registration.showNotification(title,options));
+  const notify=self.registration.showNotification(title,options);
+  const signalVisibleClient=self.clients.matchAll({type:'window',includeUncontrolled:true}).then(clients=>{
+    const visible=clients.find(client=>client.visibilityState==='visible');
+    if(visible)visible.postMessage({type:'CLIMA_ALERT_PUSH',title,body:options.body});
+  });
+  event.waitUntil(Promise.all([notify,signalVisibleClient]));
 });
 
 self.addEventListener('notificationclick',event=>{
