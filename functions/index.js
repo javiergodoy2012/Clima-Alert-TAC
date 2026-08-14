@@ -205,7 +205,8 @@ async function sendPushToDeviceDocs(deviceDocs, content, data = {}) {
   const message = {
     tokens:devices.map(device => device.token),
     data:{type:"clima-alert", url:"./", ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, String(value)]))},
-    webpush:{headers:{Urgency:"high"}}
+    webpush:{headers:{Urgency:"high"}},
+    android:{priority:"high"}
   };
   const response = await getMessaging().sendEachForMulticast(message);
   const invalidDocs = [];
